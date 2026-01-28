@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gathr 愛情需求卡（測試版）</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "PingFang TC", "Noto Sans TC", sans-serif; max-width: 860px; margin: 24px auto; padding: 0 16px; line-height: 1.5; }
+    h1 { font-size: 22px; margin: 0 0 8px; }
+    .muted { color: #666; font-size: 14px; margin-bottom: 16px; }
+    .card { border: 1px solid #ddd; border-radius: 12px; padding: 14px 14px 10px; margin: 12px 0; }
+    .qtitle { font-weight: 700; margin-bottom: 8px; }
+    .opts { display: grid; gap: 8px; }
+    label { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; }
+    input[type="radio"] { margin-top: 3px; }
+    select, textarea { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #ccc; font-size: 14px; }
+    textarea { min-height: 80px; resize: vertical; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btns { display: flex; gap: 10px; margin: 18px 0; }
+    button { padding: 10px 14px; border-radius: 10px; border: 1px solid #222; background: #222; color: #fff; cursor: pointer; }
+    button.secondary { background: #fff; color: #222; }
+    .result { border: 2px solid #222; border-radius: 14px; padding: 16px; margin-top: 18px; }
+    .pill { display:inline-block; padding: 4px 10px; border-radius: 999px; border: 1px solid #222; margin-right: 8px; font-size: 13px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 13px; background: #f6f6f6; padding: 10px; border-radius: 10px; overflow:auto; }
+    .warn { color: #a00; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h1>Gathr 愛情需求卡（測試版）</h1>
+  <div class="muted">約 7–8 分鐘 · 21 題 · 測完會輸出「主類型 + 次類型（若有）」</div>
+
+  <div id="app"></div>
+
+  <div class="btns">
+    <button id="btnCalc">計算結果</button>
+    <button class="secondary" id="btnReset">清空重來</button>
+  </div>
+
+  <div id="out"></div>
+
+<script>
+/**
+ * =========================
+ * 1) 題庫（v1.1）
+ * =========================
+ * 類型：
+ * - scale: 1~5
+ * - single: 單選（radio）
+ * - bool: 是/否
+ * - text: 開放題
+ */
+const QUESTIONS = [
+  // 第一段（4）
+  { id:"Q1", type:"scale", title:"Q1 目前在你的人生中，「感情」的重要程度是？", labels:["1 不重要","2","3","4","5 非常重要"] },
+  { id:"Q2", type:"single", title:"Q2 如果一段關係需要你穩定投入時間與心力，你的第一反應是？",
+    options:[["A","現在不太行"],["B","可以，但會有壓力"],["C","沒問題，我有餘裕"]] },
+  { id:"Q3", type:"single", title:"Q3 如果短期內沒有發展出關係，你會？",
+    options:[["A","鬆一口氣"],["B","有點可惜，但能接受"],["C","會明顯失落"]] },
+  { id:"Q4", type:"bool", title:"Q4 你是否認同：『我現在的人生重心，可能暫時放不下一段需要被認真對待的關係。』" },
+
+  // 第二段（6）
+  { id:"Q5", type:"single", title:"Q5（強制單選）如果只能選一個，你現在最希望關係帶來的是？",
+    options:[["A","生活中不要那麼孤單（一起吃飯、玩、出門）"],["B","被在乎、被回應、被放在心上"],["C","有人可以一起把生活過好"],["D","我現在說不清楚"]] },
+  { id:"Q6", type:"scale", title:"Q6 你對「週末是否有人一起安排活動」的在意程度？", labels:["1 完全不在意","2","3","4","5 非常在意"] },
+  { id:"Q7", type:"scale", title:"Q7 你對「情緒是否被穩定回應」的在意程度？", labels:["1 不需要","2","3","4","5 非常需要"] },
+  { id:"Q8", type:"scale", title:"Q8 你對「一起規劃生活（居住、作息、未來）」的在意程度？", labels:["1 完全沒想過","2","3","4","5 非常在意"] },
+  { id:"Q9", type:"single", title:"Q9（二選一）如果只能選一個，你更在意？",
+    options:[["A","關係能不能自然融入生活"],["B","情緒有沒有被穩定接住"]] },
+  { id:"Q10", type:"single", title:"Q10 當你情緒低落時，你更希望對方？",
+    options:[["A","陪我做點事、轉移注意力"],["B","聽我說、理解我的感受"],["C","用實際行動支持我"]] },
+
+  // 第三段（6）
+  { id:"Q11", type:"single", title:"Q11 如果關係需要你調整生活習慣（作息、時間），你會？",
+    options:[["A","盡量不調整"],["B","可以微調"],["C","願意認真協調"]] },
+  { id:"Q12", type:"scale", title:"Q12 你是否願意為了關係，減少部分個人自由時間？", labels:["1 完全不願意","2","3","4","5 非常願意"] },
+  { id:"Q13", type:"single", title:"Q13 關於「住在一起」這件事，你目前的感覺？",
+    options:[["A","完全不在考慮範圍"],["B","未來可能，但不是現在"],["C","是我會認真思考的事"]] },
+  { id:"Q14", type:"single", title:"Q14 你是否認同：『只要有情感連結，不一定要常見面或一起生活。』",
+    options:[["H","非常認同"],["M","有點認同"],["L","不太認同"]] },
+  { id:"Q15", type:"single", title:"Q15 你是否認同：『如果關係穩定，我會希望它自然走進我的日常生活。』",
+    options:[["H","非常認同"],["M","有點認同"],["L","不太認同"]] },
+  { id:"Q16", type:"single", title:"Q16 當關係遇到現實壓力（時間、距離、家庭），你通常會？",
+    options:[["A","優先保護自己的生活"],["B","嘗試協調看看"],["C","會把關係納入重要考量"]] },
+
+  // 第四段（5）
+  { id:"Q17", type:"single", title:"Q17 你目前的狀態更接近？",
+    options:[["A","穩定但忙碌"],["B","正在經歷轉折或調整期"],["C","狀態穩定，想認真投入關係"]] },
+  { id:"Q18", type:"bool", title:"Q18 你是否認同：『我現在更想認識人，而不是立刻確定關係。』" },
+  { id:"Q19", type:"scale", title:"Q19 你目前對「長期關係」的心理準備度？", labels:["1 幾乎沒有","2","3","4","5 很高"] },
+  { id:"Q20", type:"scale", title:"Q20 你對關係「不確定性」的容忍度？", labels:["1 非常低","2","3","4","5 非常高"] },
+  { id:"Q21", type:"text",  title:"Q21（可選）你希望現在的關係，為你的人生帶來什麼？" }
+];
+
+/**
+ * =========================
+ * 2) 類型文案（最終輸出）
+ * =========================
+ */
+const COPY = {
+  T1: {
+    title: "T1｜關係暫緩型：現在的人生，真的已經很滿了",
+    one: "你不是不重視感情，而是你現在的人生，暫時裝不下一段需要被認真對待的關係。",
+    body: "你目前的能量與生活重心，更多放在其他重要的事情上。這並不代表你不適合戀愛，而是你很清楚自己的邊界，也不想勉強開始一段無法好好經營的關係。",
+    tip: "現在不進入關係，本身也是一種對自己和他人的負責。等人生空間松動時，你會更清楚自己要什麼。"
+  },
+  T2: {
+    title: "T2｜低密度連結型：想要有人一起，但不想被關係占滿",
+    one: "你希望關係自然地發生在生活裡，而不是成為壓力來源。",
+    body: "你在意的是陪伴感與生活體驗：一起吃飯、出門、旅行，讓生活不那麼孤單。你並不排斥情感，但不希望關係要求你過度調整現有的人生節奏。",
+    tip: "對你來說，好的關係應該是加分，而不是負擔。找到節奏相近的人，比談得很深更重要。"
+  },
+  T3: {
+    title: "T3｜情感補位型：我想被在乎、被回應",
+    one: "你真正重視的，是情緒有沒有被認真對待。",
+    body: "你希望在關係中感受到穩定的情感連結。不一定要天天見面，但你很在意對方是否願意理解你、回應你、把你放在心上。",
+    tip: "你需要的是情感上的可靠，而不是形式上的熱鬧。當對方能接住你時，你會非常投入。"
+  },
+  T4: {
+    title: "T4｜生活夥伴型：我想要的是，一起把日子過好",
+    one: "你期待關係能真正走進生活，而不是只停在感覺。",
+    body: "你開始在意現實層面的協作：生活安排、時間分配、未來規劃。情感不一定要濃烈，但關係要穩定、好溝通、能一起面對現實。",
+    tip: "對你來說，適不適合往往比愛不愛更重要。你適合能和你並肩生活的人。"
+  },
+  T5: {
+    title: "T5｜認真投入型：我已準備好，把關係放進人生規劃",
+    one: "你願意為了合適的關係，調整自己的人生。",
+    body: "你對親密關係有明確期待，也有足夠的心理準備。你希望關係是長期的，並且能成為人生的重要組成部分。",
+    tip: "你適合同樣認真、清楚自己要什麼的人。慢一點沒關係，但方向要一致。"
+  },
+  T6: {
+    title: "T6｜探索過渡型：我正在重新認識自己",
+    one: "你現在更重要的，不是定義關係，而是確認自己。",
+    body: "你正處在人生或情感的轉折階段。你願意認識人、交流、嘗試，但還不急著給關係下定義。",
+    tip: "探索不是逃避，而是一種對未來更負責任的準備。當你準備好時，你會更笃定。"
+  }
+};
+
+/**
+ * =========================
+ * 3) 計分規則（v2.0）
+ * =========================
+ * 指標：
+ * - I_Energy: 1~5 avg
+ * - I_Companion/I_Emotion/I_Life: 0~20 sum (Q5權重 0.8 若選D)
+ * - I_Commit: 1~5 avg
+ */
+
+function mapABCTo135(v){ return v==="A"?1 : v==="B"?3 : 5; }
+function mapBoolTo15(v){ return v===true?1 : 5; } // Q4: 是=1, 否=5
+function mapHMLTo531(v){ return v==="H"?5 : v==="M"?3 : 1; }
+
+function calcIndexes(ans){
+  // Required checks
+  for (const q of QUESTIONS){
+    if (q.type==="text") continue; // optional
+    if (ans[q.id] === undefined || ans[q.id] === null || ans[q.id] === "") {
+      throw new Error(`尚未完成：${q.id}`);
+    }
+  }
+
+  // I_Energy
+  const q1 = +ans.Q1;
+  const q2v = mapABCTo135(ans.Q2);
+  const q3v = mapABCTo135(ans.Q3);
+  const q4v = mapBoolTo15(ans.Q4); // 是/否
+  const I_Energy = (q1 + q2v + q3v + q4v) / 4;
+
+  // raw function scores (0~20)
+  const w = (ans.Q5 === "D") ? 0.8 : 1.0;
+
+  const I_Companion_raw =
+    (ans.Q5 === "A" ? 5 : 0) +
+    (+ans.Q6) +
+    (ans.Q9 === "A" ? 5 : 0) +
+    (ans.Q10 === "A" ? 5 : 0);
+
+  const I_Emotion_raw =
+    (ans.Q5 === "B" ? 5 : 0) +
+    (+ans.Q7) +
+    (ans.Q9 === "B" ? 5 : 0) +
+    (ans.Q10 === "B" ? 5 : 0);
+
+  const I_Life_raw =
+    (ans.Q5 === "C" ? 5 : 0) +
+    (+ans.Q8) +
+    (ans.Q10 === "C" ? 5 : 0) +
+    mapHMLTo531(ans.Q15);
+
+  const I_Companion = I_Companion_raw * w;
+  const I_Emotion   = I_Emotion_raw   * w;
+  const I_Life      = I_Life_raw      * w;
+
+  // I_Commit
+  const q11v = mapABCTo135(ans.Q11);
+  const q12 = +ans.Q12;
+  const q13v = mapABCTo135(ans.Q13);
+  const q16v = mapABCTo135(ans.Q16);
+  const q19 = +ans.Q19;
+  const I_Commit = (q11v + q12 + q13v + q16v + q19) / 5;
+
+  return { I_Energy, I_Companion, I_Emotion, I_Life, I_Commit, w };
+}
+
+function judgeType(ans){
+  const ix = calcIndexes(ans);
+
+  // Early Exit: T1 (任兩條)
+  const t1Signals = [
+    ix.I_Energy <= 2.5,
+    ans.Q4 === true,
+    ans.Q2 === "A",
+    (+ans.Q19) <= 2
+  ].filter(Boolean).length;
+
+  if (t1Signals >= 2){
+    return {
+      main: "T1",
+      secondary: null,
+      confidence: "高",
+      indexes: ix,
+      note: `T1 early-exit（命中 ${t1Signals} 條）`
+    };
+  }
+
+  // 主軸功能排序
+  const func = [
+    ["I_Companion", ix.I_Companion],
+    ["I_Emotion", ix.I_Emotion],
+    ["I_Life", ix.I_Life],
+  ].sort((a,b)=>b[1]-a[1]);
+
+  const mainFunc = func[0][0];
+  const mainFuncScore = func[0][1];
+  const secondFunc = func[1][0];
+  const secondFuncScore = func[1][1];
+
+  // T6 判定（v2.0 组合判定）
+  const condA = (ans.Q17 === "B") || (ans.Q18 === true);
+  const condB = (ix.I_Commit <= 3) && ((+ans.Q19) <= 3);
+  const condC = (mainFuncScore - secondFuncScore) <= 3;
+  const allowT6 = condA && condB && condC;
+
+  // T5 严格判定
+  const isT5 =
+    ix.I_Commit >= 4 &&
+    ((ix.I_Emotion >= 15) || (ix.I_Life >= 15)) &&
+    (ans.Q17 === "C");
+
+  // 主型（先判 T5）
+  let main = null;
+  if (isT5){
+    main = "T5";
+  } else {
+    if (mainFunc === "I_Companion" && ix.I_Commit < 3.5) main = "T2";
+    else if (mainFunc === "I_Emotion" && ix.I_Commit >= 2.5 && ix.I_Commit < 4) main = "T3";
+    else if (mainFunc === "I_Life" && ix.I_Commit >= 3) main = "T4";
+    else {
+      // fallback：用主軸直接映射（避免卡死）
+      main = (mainFunc === "I_Companion") ? "T2" : (mainFunc === "I_Emotion") ? "T3" : "T4";
+    }
+  }
+
+  // 次型
+  let secondary = null;
+  const secondClose = (mainFuncScore - secondFuncScore) <= 3;
+  if (ix.I_Commit >= 3 && secondClose){
+    secondary = (secondFunc === "I_Companion") ? "T2" : (secondFunc === "I_Emotion") ? "T3" : "T4";
+    // 避免主次相同
+    if (secondary === main) secondary = null;
+  }
+
+  // T6 可作为主或次：这里采用「如果允许T6，则作为次型优先」的温柔策略
+  // 解释：探索期通常不想被贴主标签；除非主型置信度很低。
+  let note = `主軸=${mainFunc}(${mainFuncScore.toFixed(1)}), 次軸=${secondFunc}(${secondFuncScore.toFixed(1)}), I_Commit=${ix.I_Commit.toFixed(2)}`;
+  let confidence = "中";
+
+  // 置信度：主轴领先越多越高
+  const lead = mainFuncScore - secondFuncScore;
+  if (lead >= 6) confidence = "高";
+  else if (lead <= 2) confidence = "低";
+
+  if (allowT6){
+    // 若本来就有次型，T6 作为「补充状态标签」输出到 note；或把次型替换成 T6（可选策略）
+    // 这里：若 lead 很低（<=2），直接让 T6 成为次型；否则放到备注，不强推。
+    if (lead <= 2){
+      secondary = "T6";
+    } else {
+      note += "｜T6條件成立（狀態探索），未覆蓋主型";
+      // 也可以选择：如果用户更想认识人（Q18=是），把次型设为T6
+      if (ans.Q18 === true) secondary = "T6";
+    }
+  }
+
+  return { main, secondary, confidence, indexes: ix, note };
+}
+
+/**
+ * =========================
+ * 4) UI 渲染
+ * =========================
+ */
+const app = document.getElementById("app");
+const out = document.getElementById("out");
+
+function render(){
+  app.innerHTML = "";
+  QUESTIONS.forEach(q=>{
+    const card = document.createElement("div");
+    card.className = "card";
+    const title = document.createElement("div");
+    title.className = "qtitle";
+    title.textContent = q.title;
+    card.appendChild(title);
+
+    const opts = document.createElement("div");
+    opts.className = "opts";
+
+    if (q.type === "scale"){
+      // dropdown 1-5
+      const sel = document.createElement("select");
+      sel.name = q.id;
+      const op0 = document.createElement("option");
+      op0.value = "";
+      op0.textContent = "請選擇…";
+      sel.appendChild(op0);
+      for (let i=1;i<=5;i++){
+        const op = document.createElement("option");
+        op.value = String(i);
+        op.textContent = q.labels ? q.labels[i-1] : String(i);
+        sel.appendChild(op);
+      }
+      opts.appendChild(sel);
+    }
+
+    if (q.type === "single"){
+      q.options.forEach(([val, labelText])=>{
+        const lab = document.createElement("label");
+        const r = document.createElement("input");
+        r.type = "radio";
+        r.name = q.id;
+        r.value = val;
+        const sp = document.createElement("span");
+        sp.textContent = `${val}. ${labelText}`;
+        lab.appendChild(r);
+        lab.appendChild(sp);
+        opts.appendChild(lab);
+      });
+    }
+
+    if (q.type === "bool"){
+      [["yes","是"],["no","否"]].forEach(([val, text])=>{
+        const lab = document.createElement("label");
+        const r = document.createElement("input");
+        r.type = "radio";
+        r.name = q.id;
+        r.value = val;
+        const sp = document.createElement("span");
+        sp.textContent = text;
+        lab.appendChild(r);
+        lab.appendChild(sp);
+        opts.appendChild(lab);
+      });
+    }
+
+    if (q.type === "text"){
+      const ta = document.createElement("textarea");
+      ta.name = q.id;
+      ta.placeholder = "可不填。一句話就好。";
+      opts.appendChild(ta);
+    }
+
+    card.appendChild(opts);
+    app.appendChild(card);
+  });
+}
+
+function readAnswers(){
+  const ans = {};
+  QUESTIONS.forEach(q=>{
+    if (q.type === "scale"){
+      const sel = app.querySelector(`select[name="${q.id}"]`);
+      ans[q.id] = sel.value ? Number(sel.value) : "";
+    } else if (q.type === "single"){
+      const r = app.querySelector(`input[name="${q.id}"]:checked`);
+      ans[q.id] = r ? r.value : "";
+    } else if (q.type === "bool"){
+      const r = app.querySelector(`input[name="${q.id}"]:checked`);
+      ans[q.id] = r ? (r.value === "yes") : "";
+    } else if (q.type === "text"){
+      const ta = app.querySelector(`textarea[name="${q.id}"]`);
+      ans[q.id] = ta.value || "";
+    }
+  });
+  return ans;
+}
+
+function typeToName(t){
+  return COPY[t]?.title || t;
+}
+
+function renderResult(res, ans){
+  const mainCopy = COPY[res.main];
+  const secCopy = res.secondary ? COPY[res.secondary] : null;
+
+  const ix = res.indexes;
+  const html = `
+    <div class="result">
+      <div style="margin-bottom:10px;">
+        <span class="pill">主類型：${res.main}</span>
+        ${res.secondary ? `<span class="pill">次類型：${res.secondary}</span>` : `<span class="pill">次類型：無</span>`}
+        <span class="pill">置信度：${res.confidence}</span>
+      </div>
+
+      <h2 style="margin:8px 0 6px; font-size:18px;">${mainCopy.title}</h2>
+      <div><b>${mainCopy.one}</b></div>
+      <div style="margin-top:8px;">${mainCopy.body}</div>
+      <div style="margin-top:10px;"><i>溫柔提醒：</i>${mainCopy.tip}</div>
+
+      ${secCopy ? `
+        <hr style="margin:16px 0;" />
+        <h3 style="margin:0 0 6px; font-size:16px;">次類型補充：${secCopy.title}</h3>
+        <div><b>${secCopy.one}</b></div>
+        <div style="margin-top:8px;">${secCopy.body}</div>
+      ` : ""}
+
+      <hr style="margin:16px 0;" />
+      <div style="font-weight:700; margin-bottom:6px;">指標（Debug）</div>
+      <div class="mono">
+I_Energy=${ix.I_Energy.toFixed(2)}
+I_Companion=${ix.I_Companion.toFixed(1)} (raw=${(ix.I_Companion/ix.w).toFixed(1)}, w=${ix.w})
+I_Emotion=${ix.I_Emotion.toFixed(1)} (raw=${(ix.I_Emotion/ix.w).toFixed(1)}, w=${ix.w})
+I_Life=${ix.I_Life.toFixed(1)} (raw=${(ix.I_Life/ix.w).toFixed(1)}, w=${ix.w})
+I_Commit=${ix.I_Commit.toFixed(2)}
+note=${res.note}
+      </div>
+
+      ${ans.Q21 ? `<div style="margin-top:12px;"><b>你的開放回答：</b><br/>${escapeHtml(ans.Q21)}</div>` : ""}
+
+    </div>
+  `;
+  out.innerHTML = html;
+}
+
+function escapeHtml(s){
+  return String(s)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;")
+    .replaceAll("\n","<br/>");
+}
+
+document.getElementById("btnCalc").addEventListener("click", ()=>{
+  out.innerHTML = "";
+  try{
+    const ans = readAnswers();
+    const res = judgeType(ans);
+    renderResult(res, ans);
+    window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+  }catch(e){
+    out.innerHTML = `<div class="warn">⚠️ ${escapeHtml(e.message || String(e))}</div>`;
+    window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+  }
+});
+
+document.getElementById("btnReset").addEventListener("click", ()=>{
+  render();
+  out.innerHTML = "";
+});
+
+render();
+</script>
+</body>
+</html>
