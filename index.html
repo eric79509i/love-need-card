@@ -27,13 +27,28 @@
     .nav { display:flex; justify-content:space-between; gap:10px; margin-top: 12px; }
     button { padding: 10px 14px; border-radius: 12px; border: 1px solid #222; background: #222; color: #fff; cursor: pointer; }
     button.secondary { background:#fff; color:#222; }
+    button.ghost { background:#fff; color:#222; border:1px dashed #222; }
     button:disabled { opacity:0.4; cursor:not-allowed; }
     .mini { font-size: 12px; color: var(--muted); margin-top: 8px; }
     .warn { color: #a00; font-weight: 700; margin-top: 10px; }
-    .result { border:2px solid #222; border-radius: 14px; padding: 16px; margin-top: 14px; }
+    .result { border:2px solid #222; border-radius: 14px; padding: 16px; margin-top: 14px; background:#fff; }
     .pill { display:inline-block; padding: 4px 10px; border-radius: 999px; border: 1px solid #222; margin-right: 8px; font-size: 13px; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 13px; background: #f6f6f6; padding: 10px; border-radius: 10px; overflow:auto; }
     .footerActions { display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px; }
+
+    /* Result sections */
+    .secWrap { margin-top: 10px; }
+    .secTitle { font-weight: 900; margin: 12px 0 6px; }
+    .bullets { margin: 6px 0 0 18px; }
+    .ctaRow { display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px; }
+    .toggleBtn { margin-top: 10px; }
+    .divider { border-top:1px solid var(--bd); margin:14px 0; }
+    .badge { display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid var(--bd); font-size:12px; color:var(--muted); margin-left:8px; }
+
+    /* NEW: screenshot-friendly helpers */
+    .captureWrap { padding: 10px; background:#fff; }
+    .captureBar { display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center; margin: 10px 0 0; }
+    .captureHint { font-size:12px; color:var(--muted); }
   </style>
 </head>
 
@@ -69,19 +84,16 @@
     </div>
   </div>
 
+  <!-- NEW: html2canvas for saving result as image (static deploy friendly) -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
 <script>
 /**
  * =========================
  * 1) 题库（v1.1）
  * =========================
- * 类型：
- * - scale: 1~5
- * - single: 单选（radio）
- * - bool: 是/否（radio）
- * - text: 开放题（可选）
  */
 const QUESTIONS = [
-  // 第一段（4）
   { id:"Q1", type:"scale", title:"Q1 目前在你的人生中，「感情」的重要程度是？", labels:["1 不重要","2","3","4","5 非常重要"] },
   { id:"Q2", type:"single", title:"Q2 如果一段关系需要你稳定投入时间与心力，你的第一反应是？",
     options:[["A","现在不太行"],["B","可以，但会有压力"],["C","没问题，我有余裕"]] },
@@ -89,7 +101,6 @@ const QUESTIONS = [
     options:[["A","松一口气"],["B","有点可惜，但能接受"],["C","会明显失落"]] },
   { id:"Q4", type:"bool", title:"Q4 你是否认同：『我现在的人生重心，可能暂时放不下一段需要被认真对待的关系。』" },
 
-  // 第二段（6）
   { id:"Q5", type:"single", title:"Q5（强制单选）如果只能选一个，你现在最希望关系带来的是？",
     options:[["A","生活中不要那么孤单（一起吃饭、玩、出门）"],["B","被在乎、被回应、被放在心上"],["C","有人可以一起把生活过好"],["D","我现在说不清楚"]] },
   { id:"Q6", type:"scale", title:"Q6 你对「周末是否有人一起安排活动」的在意程度？", labels:["1 完全不在意","2","3","4","5 非常在意"] },
@@ -100,7 +111,6 @@ const QUESTIONS = [
   { id:"Q10", type:"single", title:"Q10 当你情绪低落时，你更希望对方？",
     options:[["A","陪我做点事、转移注意力"],["B","听我说、理解我的感受"],["C","用实际行动支持我"]] },
 
-  // 第三段（6）
   { id:"Q11", type:"single", title:"Q11 如果关系需要你调整生活习惯（作息、时间），你会？",
     options:[["A","尽量不调整"],["B","可以微调"],["C","愿意认真协调"]] },
   { id:"Q12", type:"scale", title:"Q12 你是否愿意为了关系，减少部分个人自由时间？", labels:["1 完全不愿意","2","3","4","5 非常愿意"] },
@@ -113,7 +123,6 @@ const QUESTIONS = [
   { id:"Q16", type:"single", title:"Q16 当关系遇到现实压力（时间、距离、家庭），你通常会？",
     options:[["A","优先保护自己的生活"],["B","尝试协调看看"],["C","会把关系纳入重要考量"]] },
 
-  // 第四段（5）
   { id:"Q17", type:"single", title:"Q17 你目前的状态更接近？",
     options:[["A","稳定但忙碌"],["B","正在经历转折或调整期"],["C","状态稳定，想认真投入关系"]] },
   { id:"Q18", type:"bool", title:"Q18 你是否认同：『我现在更想认识人，而不是立刻确定关系。』" },
@@ -124,45 +133,232 @@ const QUESTIONS = [
 
 /**
  * =========================
- * 2) 类型文案（最终输出）
+ * 2) 结果页文案（默认折叠：精简版）
  * =========================
  */
 const COPY = {
   T1: {
     title: "T1｜关系暂缓型：现在的人生，真的已经很满了",
     one: "你不是不重视感情，而是你现在的人生，暂时装不下一段需要被认真对待的关系。",
-    body: "你目前的能量与生活重心，更多放在其他重要的事情上。这并不代表你不适合恋爱，而是你很清楚自己的边界，也不想勉强开始一段无法好好经营的关系。",
-    tip: "现在不进入关系，本身也是一种对自己和他人的负责。等人生空间松动时，你会更清楚自己要什么。"
+    brief: {
+      bullets: [
+        "此刻更适合「先稳住生活」，再留出一点轻量连接。",
+        "条件设置重点：低消耗、边界感、时间弹性。",
+        "最重要的是：不要为了“不孤单”硬上关系。"
+      ],
+      ctaTitle: "下一步建议",
+      ctaText: "先做「底线条件」：能量不被消耗 + 节奏被尊重，再进入匹配。"
+    },
+    sections: {
+      fit: "不是不谈恋爱，而是先把人生配置调顺：让关系成为加分，而不是负担。",
+      func: "关系功能重点：轻量陪伴 / 低压力连接 / 保持边界。",
+      conditions: [
+        "低消耗沟通：不逼问、不夺命连环call",
+        "时间弹性：能接受你忙/阶段性压力",
+        "情绪稳定：不把情绪全丢给你处理",
+        "边界感：尊重隐私与节奏",
+        "同城/近距离：降低维护成本"
+      ],
+      pacing: [
+        "轻量但稳定：例如每周一次见面/固定一个时段通话",
+        "约会偏“回血型”：吃饭散步、短途、轻活动"
+      ],
+      pitfalls: [
+        "一开始就被要求承诺 → 你会本能退缩",
+        "对方强情绪依赖 → 容易崩盘",
+        "你用“忙”当万能挡箭牌 → 容易错过好对象（建议明确边界）"
+      ],
+      next: [
+        "Gathr 匹配：优先筛「高理解度 + 低占用型」对象",
+        "做条件卡时：把「低消耗」放第一梯队"
+      ]
+    }
   },
   T2: {
     title: "T2｜低密度连结型：想要有人一起，但不想被关系占满",
     one: "你希望关系自然地发生在生活里，而不是成为压力来源。",
-    body: "你在意的是陪伴感与生活体验：一起吃饭、出门、旅行，让生活不那么孤单。你并不排斥情感，但不希望关系要求你过度调整现有的人生节奏。",
-    tip: "对你来说，好的关系应该是加分，而不是负担。找到节奏相近的人，比谈得很深更重要。"
+    brief: {
+      bullets: [
+        "你最需要的是：生活陪伴 + 一起发生体验（周末/旅行/活动）。",
+        "条件设置重点：节奏同频、同城可见、边界与自由度一致。",
+        "雷区：对方把你当“情绪急救包”或你不表达需求。"
+      ],
+      ctaTitle: "下一步建议",
+      ctaText: "把「节奏匹配 + 同城 + 兴趣同频」设成核心条件，先把相处跑顺再谈定义。"
+    },
+    sections: {
+      fit: "最适合的关系形态：生活里有连接、有陪伴，但不必高强度绑定。",
+      func: "关系功能重点：一起吃饭/出门/旅行/活动，让生活不那么孤单。",
+      conditions: [
+        "作息/生活节奏匹配（周末是否同频、社交频率）",
+        "兴趣与出行偏好（旅行、吃喝玩乐、运动/展览）",
+        "同城/通勤成本（能见才叫关系）",
+        "情绪不过载（能聊，但不要求时时刻刻深度共鸣）",
+        "边界与自由度一致（黏度、见面频率、社交空间）"
+      ],
+      pacing: [
+        "推荐一周 1–2 次高质量见面",
+        "用共同体验升温：做饭/短途/看展/运动",
+        "不必一上来谈“我们是什么”，先把节奏跑顺"
+      ],
+      pitfalls: [
+        "对方把你当“情绪急救包” → 你会退",
+        "你太怕麻烦不表达需求 → 对方会误判你冷",
+        "只追求好玩忽略稳定与尊重 → 容易遇到不靠谱"
+      ],
+      next: [
+        "条件卡：把「节奏匹配」「同城」「兴趣同频」拉到前排",
+        "升温卡：优先选择“轻松共同体验”的任务"
+      ]
+    }
   },
   T3: {
     title: "T3｜情感补位型：我想被在乎、被回应",
     one: "你真正重视的，是情绪有没有被认真对待。",
-    body: "你希望在关系中感受到稳定的情感连结。不一定要天天见面，但你很在意对方是否愿意理解你、回应你、把你放在心上。",
-    tip: "你需要的是情感上的可靠，而不是形式上的热闹。当对方能接住你时，你会非常投入。"
+    brief: {
+      bullets: [
+        "你需要的是：稳定回应 + 被放在心上（不一定天天见面）。",
+        "条件设置重点：沟通习惯、情绪成熟、关系观一致。",
+        "雷区：忽冷忽热、暧昧不清、用试探代替表达。"
+      ],
+      ctaTitle: "下一步建议",
+      ctaText: "把「沟通与回应习惯」设为硬门槛，少一点猜，多一点讲清楚。"
+    },
+    sections: {
+      fit: "最适合的关系形态：情感稳定、回应及时、让你有被看见的感觉。",
+      func: "关系功能重点：被理解、被回应、被放在心上。",
+      conditions: [
+        "沟通与回应习惯（是否主动、是否冷处理）",
+        "情绪成熟度（能否好好吵架/修复）",
+        "同理心与稳定性（说到做到）",
+        "关系观一致（排他/透明度/边界）",
+        "可用时间（至少能稳定投入）"
+      ],
+      pacing: [
+        "稳定频率的小剂量：每天短联络 + 每周见面",
+        "可以较早做“情绪类对话”，但要循序渐进"
+      ],
+      pitfalls: [
+        "忽冷忽热/暧昧不清 → 强消耗",
+        "过早把安全感外包给对方 → 容易焦虑",
+        "用测试/试探代替表达 → 容易误伤关系"
+      ],
+      next: [
+        "条件卡：把「沟通」「情绪成熟」「一致性」设为硬门槛",
+        "升温卡：偏“价值观/边界/修复方式”的题目更适合你"
+      ]
+    }
   },
   T4: {
     title: "T4｜生活伙伴型：我想要的是，一起把日子过好",
     one: "你期待关系能真正走进生活，而不是只停在感觉。",
-    body: "你开始在意现实层面的协作：生活安排、时间分配、未来规划。情感不一定要浓烈，但关系要稳定、好沟通、能一起面对现实。",
-    tip: "对你来说，适不适合往往比爱不爱更重要。你适合能和你并肩生活的人。"
+    brief: {
+      bullets: [
+        "你更在意：现实协作、稳定可靠、长期可持续。",
+        "条件设置重点：城市/居住、生活方式、责任感、冲突处理。",
+        "雷区：只谈浪漫不谈现实、硬磨巨大生活差异。"
+      ],
+      ctaTitle: "下一步建议",
+      ctaText: "把「同城/可迁移 + 生活习惯 + 责任感」放在第一梯队，早点聊现实但语气要温和。"
+    },
+    sections: {
+      fit: "最适合的关系形态：能一起把生活过顺、过稳、过得舒服。",
+      func: "关系功能重点：日常协作 + 长期可持续，而不是只有感觉。",
+      conditions: [
+        "城市/居住规划（未来住哪、是否愿意靠近）",
+        "作息与生活方式（卫生习惯、消费观、社交方式）",
+        "责任感与执行力（靠谱不靠谱）",
+        "冲突处理方式（能不能沟通解决）",
+        "家庭与人生安排（父母/孩子/事业优先级）"
+      ],
+      pacing: [
+        "把生活拿来一起跑：买菜做饭、一起处理小事",
+        "早期就可以聊现实：住哪、钱怎么花、未来怎么安排（语气温和）"
+      ],
+      pitfalls: [
+        "只谈浪漫不谈现实 → 你会失望",
+        "你过度“项目管理”对方 → 对方会觉得被管",
+        "生活观差异太大还硬磨 → 很累、难修"
+      ],
+      next: [
+        "条件卡：优先「同城/可迁移」「生活习惯」「责任感」",
+        "价值/行动卡：你会用得特别好（长期经营型）"
+      ]
+    }
   },
   T5: {
     title: "T5｜认真投入型：我已准备好，把关系放进人生规划",
     one: "你愿意为了合适的关系，调整自己的人生。",
-    body: "你对亲密关系有明确期待，也有足够的心理准备。你希望关系是长期的，并且能成为人生的重要组成部分。",
-    tip: "你适合同样认真、清楚自己要什么的人。慢一点没关系，但方向要一致。"
+    brief: {
+      bullets: [
+        "你适合：目标一致、承诺能力匹配、能走向长期的关系。",
+        "条件设置重点：关系目标一致、价值观底线、现实可行性。",
+        "雷区：推进太快、标准太理想化、把认真变成控制。"
+      ],
+      ctaTitle: "下一步建议",
+      ctaText: "把「关系目标」设成硬门槛，优先匹配同样认真且准备度高的人，减少无效约会。"
+    },
+    sections: {
+      fit: "最适合的关系形态：方向明确、彼此认真、能走向长期承诺。",
+      func: "关系功能重点：深度亲密 + 稳定选择 + 一起规划人生。",
+      conditions: [
+        "关系目标一致（是否同样想长期）",
+        "承诺能力匹配（时间、精力、现实条件）",
+        "价值观与底线（忠诚/透明/边界）",
+        "共同成长意愿（愿不愿意一起变好）",
+        "现实可行性（距离、工作、家庭）"
+      ],
+      pacing: [
+        "可以更快进入“确认关系”的对话，但避免压迫感",
+        "适合做“未来相关任务”：共同计划、共同决策小项目"
+      ],
+      pitfalls: [
+        "你太快推进，对方还没准备好 → 关系会被推倒",
+        "标准太理想化 → 容易挑剔",
+        "把认真变成控制 → 失去松弛感"
+      ],
+      next: [
+        "红娘/AI：优先推目标明确的人（减少无效约会）",
+        "条件卡：把“关系目标”设为硬门槛"
+      ]
+    }
   },
   T6: {
     title: "T6｜探索过渡型：我正在重新认识自己",
     one: "你现在更重要的，不是定义关系，而是确认自己。",
-    body: "你正处在人生或情感的转折阶段。你愿意认识人、交流、尝试，但还不急着给关系下定义。",
-    tip: "探索不是逃避，而是一种对未来更负责的准备。当你准备好时，你会更笃定。"
+    brief: {
+      bullets: [
+        "你更适合：低压力探索 + 逐步清晰需求（不急着定义）。",
+        "条件设置重点：安全感、尊重、节奏弹性、沟通透明。",
+        "雷区：把探索当借口逃避诚实、永远不收敛需求。"
+      ],
+      ctaTitle: "下一步建议",
+      ctaText: "先做“底线卡”而不是“理想卡”：把不伤害彼此、节奏舒服放在第一位。"
+    },
+    sections: {
+      fit: "最适合的关系形态：低压力探索 + 逐步清晰自己的需求。",
+      func: "关系功能重点：对照、试错、确认边界、重新认识自己。",
+      conditions: [
+        "安全感与尊重（不逼、不催、不羞辱）",
+        "沟通透明（能说清楚彼此期待）",
+        "节奏弹性（允许慢慢来）",
+        "价值观底线一致（至少不互相伤害）",
+        "生活可交集（能见面，能相处）"
+      ],
+      pacing: [
+        "一开始就讲清楚：我现在在探索期，不代表不认真",
+        "用体验型互动先建立真实感，再决定要不要更进一步"
+      ],
+      pitfalls: [
+        "把探索当借口逃避诚实 → 会伤人也伤己",
+        "遇到强推进型对象 → 你会反感",
+        "一直不收敛需求 → 容易陷入永远在试的循环"
+      ],
+      next: [
+        "条件卡：先做“底线卡”，再做“理想卡”",
+        "升温卡：先走轻松互相了解，不要一上来谈终局"
+      ]
+    }
   }
 };
 
@@ -170,36 +366,27 @@ const COPY = {
  * =========================
  * 3) 计分规则（v2.0）
  * =========================
- * 指标：
- * - I_Energy: 1~5 avg
- * - I_Companion/I_Emotion/I_Life: 0~20 sum (Q5权重 0.8 若选D)
- * - I_Commit: 1~5 avg
  */
-
 function mapABCTo135(v){ return v==="A"?1 : v==="B"?3 : 5; }
 function mapBoolTo15(v){ return v===true?1 : 5; } // Q4: 是=1, 否=5
 function mapHMLTo531(v){ return v==="H"?5 : v==="M"?3 : 1; }
 
 function calcIndexes(ans){
-  // Required checks（除Q21外都必须）
   for (const q of QUESTIONS){
-    if (q.id === "Q21") continue; // optional
+    if (q.id === "Q21") continue;
     if (ans[q.id] === undefined || ans[q.id] === null || ans[q.id] === "") {
       throw new Error(`尚未完成：${q.id}`);
     }
   }
 
-  // I_Energy
   const q1 = +ans.Q1;
   const q2v = mapABCTo135(ans.Q2);
   const q3v = mapABCTo135(ans.Q3);
   const q4v = mapBoolTo15(ans.Q4);
   const I_Energy = (q1 + q2v + q3v + q4v) / 4;
 
-  // weight
   const w = (ans.Q5 === "D") ? 0.8 : 1.0;
 
-  // function scores
   const I_Companion_raw =
     (ans.Q5 === "A" ? 5 : 0) +
     (+ans.Q6) +
@@ -222,7 +409,6 @@ function calcIndexes(ans){
   const I_Emotion   = I_Emotion_raw   * w;
   const I_Life      = I_Life_raw      * w;
 
-  // I_Commit
   const q11v = mapABCTo135(ans.Q11);
   const q12 = +ans.Q12;
   const q13v = mapABCTo135(ans.Q13);
@@ -236,7 +422,6 @@ function calcIndexes(ans){
 function judgeType(ans){
   const ix = calcIndexes(ans);
 
-  // Early Exit: T1（任两条）
   const t1Signals = [
     ix.I_Energy <= 2.5,
     ans.Q4 === true,
@@ -254,7 +439,6 @@ function judgeType(ans){
     };
   }
 
-  // 主轴功能排序
   const func = [
     ["I_Companion", ix.I_Companion],
     ["I_Emotion", ix.I_Emotion],
@@ -266,19 +450,16 @@ function judgeType(ans){
   const secondFunc = func[1][0];
   const secondFuncScore = func[1][1];
 
-  // T6 判定（v2.0 组合判定）
   const condA = (ans.Q17 === "B") || (ans.Q18 === true);
   const condB = (ix.I_Commit <= 3) && ((+ans.Q19) <= 3);
   const condC = (mainFuncScore - secondFuncScore) <= 3;
   const allowT6 = condA && condB && condC;
 
-  // T5 严格判定
   const isT5 =
     ix.I_Commit >= 4 &&
     ((ix.I_Emotion >= 15) || (ix.I_Life >= 15)) &&
     (ans.Q17 === "C");
 
-  // 主型（先判 T5）
   let main = null;
   if (isT5){
     main = "T5";
@@ -286,28 +467,23 @@ function judgeType(ans){
     if (mainFunc === "I_Companion" && ix.I_Commit < 3.5) main = "T2";
     else if (mainFunc === "I_Emotion" && ix.I_Commit >= 2.5 && ix.I_Commit < 4) main = "T3";
     else if (mainFunc === "I_Life" && ix.I_Commit >= 3) main = "T4";
-    else {
-      main = (mainFunc === "I_Companion") ? "T2" : (mainFunc === "I_Emotion") ? "T3" : "T4";
-    }
+    else main = (mainFunc === "I_Companion") ? "T2" : (mainFunc === "I_Emotion") ? "T3" : "T4";
   }
 
-  // 次型（主次并行）
   let secondary = null;
-  const secondClose = (mainFuncScore - secondFuncScore) <= 3;
+  const lead = mainFuncScore - secondFuncScore;
+  const secondClose = lead <= 3;
   if (ix.I_Commit >= 3 && secondClose){
     secondary = (secondFunc === "I_Companion") ? "T2" : (secondFunc === "I_Emotion") ? "T3" : "T4";
     if (secondary === main) secondary = null;
   }
 
-  // 置信度：主轴领先越多越高
   let confidence = "中";
-  const lead = mainFuncScore - secondFuncScore;
   if (lead >= 6) confidence = "高";
   else if (lead <= 2) confidence = "低";
 
   let note = `主轴=${mainFunc}(${mainFuncScore.toFixed(1)}), 次轴=${secondFunc}(${secondFuncScore.toFixed(1)}), I_Commit=${ix.I_Commit.toFixed(2)}`;
 
-  // T6 作为“状态标签”优先放次型（更温柔）
   if (allowT6){
     if (lead <= 2){
       secondary = "T6";
@@ -333,9 +509,7 @@ const out = document.getElementById("out");
 const miniHint = document.getElementById("miniHint");
 
 let currentIndex = 0;
-
-// 答案存储（跨页）
-const answers = {}; // { Q1: ..., Q2: ... }
+const answers = {};
 
 function escapeHtml(s){
   return String(s)
@@ -348,7 +522,6 @@ function escapeHtml(s){
 }
 
 function totalRequired(){
-  // 除 Q21 以外都必填
   return QUESTIONS.filter(q => q.id !== "Q21").length;
 }
 
@@ -366,7 +539,6 @@ function renderProgress(){
   const step = currentIndex + 1;
   stepText.textContent = `第 ${step} / ${total} 题`;
 
-  // 进度条：用“必填完成度”更符合心理测验体验
   const done = countAnsweredRequired();
   const req = totalRequired();
   const pct = Math.round((done / req) * 100);
@@ -380,17 +552,13 @@ function renderQuestion(){
   out.innerHTML = "";
 
   const q = QUESTIONS[currentIndex];
-
-  // 按钮状态
   document.getElementById("btnPrev").disabled = currentIndex === 0;
 
-  // Next按钮文本
   const isLast = currentIndex === QUESTIONS.length - 1;
   document.getElementById("btnNext").textContent = isLast ? "提交并查看结果" : "下一题";
 
   renderProgress();
 
-  // 题卡
   const card = document.createElement("div");
   card.className = "qcard";
 
@@ -401,14 +569,12 @@ function renderQuestion(){
 
   const hint = document.createElement("div");
   hint.className = "qhint";
-  if (q.id === "Q21") hint.textContent = "可不填，一句话就好。";
-  else hint.textContent = "请选择最符合你当下状态的选项。";
+  hint.textContent = (q.id === "Q21") ? "可不填，一句话就好。" : "请选择最符合你当下状态的选项。";
   card.appendChild(hint);
 
   const opts = document.createElement("div");
   opts.className = "opts";
 
-  // 渲染控件 + 回填
   if (q.type === "scale"){
     const sel = document.createElement("select");
     sel.name = q.id;
@@ -511,10 +677,9 @@ function renderQuestion(){
 
 function validateCurrent(){
   const q = QUESTIONS[currentIndex];
-  if (q.id === "Q21") return true; // optional
+  if (q.id === "Q21") return true;
   const v = answers[q.id];
-  if (v === undefined || v === null || v === "") return false;
-  return true;
+  return !(v === undefined || v === null || v === "");
 }
 
 function goNext(){
@@ -532,9 +697,7 @@ function goNext(){
     return;
   }
 
-  // 最后一题：计算结果
   try{
-    // 将 answers 作为判型输入（确保未答题报错清晰）
     const res = judgeType(answers);
     renderResult(res, answers);
   }catch(e){
@@ -550,52 +713,175 @@ function goPrev(){
   }
 }
 
-function renderResult(res, ans){
-  const mainCopy = COPY[res.main];
-  const secCopy = res.secondary ? COPY[res.secondary] : null;
+/**
+ * =========================
+ * 5) 结果页渲染（默认折叠：精简版）
+ * =========================
+ */
+function renderTypeBlock(typeCode, isMain, collapsedDefault=true){
+  const c = COPY[typeCode];
+  const badge = isMain ? "主类型" : "次类型";
+  const blockId = `${typeCode}_${isMain ? "main" : "sec"}`;
 
-  const ix = res.indexes;
-  const html = `
-    <div class="result">
-      <div style="margin-bottom:10px;">
-        <span class="pill">主类型：${res.main}</span>
-        ${res.secondary ? `<span class="pill">次类型：${res.secondary}</span>` : `<span class="pill">次类型：无</span>`}
-        <span class="pill">置信度：${res.confidence}</span>
+  const briefBullets = c.brief.bullets.map(x => `<li>${escapeHtml(x)}</li>`).join("");
+  const full = `
+    <div class="secWrap">
+      <div class="secTitle">你现在最适合的关系形态</div>
+      <div>${escapeHtml(c.sections.fit)}</div>
+
+      <div class="secTitle">你要的“关系功能”</div>
+      <div>${escapeHtml(c.sections.func)}</div>
+
+      <div class="secTitle">条件设置建议（优先级）</div>
+      <ul class="bullets">${c.sections.conditions.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul>
+
+      <div class="secTitle">互动节奏建议</div>
+      <ul class="bullets">${c.sections.pacing.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul>
+
+      <div class="secTitle">关系雷区（容易踩）</div>
+      <ul class="bullets">${c.sections.pitfalls.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul>
+
+      <div class="secTitle">Gathr 下一步</div>
+      <ul class="bullets">${c.sections.next.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul>
+    </div>
+  `;
+
+  return `
+    <div class="divider"></div>
+    <div>
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+        <div>
+          <div style="font-weight:900; font-size:16px;">${escapeHtml(c.title)} <span class="badge">${badge}</span></div>
+          <div style="margin-top:6px;"><b>${escapeHtml(c.one)}</b></div>
+        </div>
       </div>
 
-      <h2 style="margin:8px 0 6px; font-size:18px;">${mainCopy.title}</h2>
-      <div><b>${mainCopy.one}</b></div>
-      <div style="margin-top:8px;">${mainCopy.body}</div>
-      <div style="margin-top:10px;"><i>温柔提醒：</i>${mainCopy.tip}</div>
+      <div style="margin-top:10px;">
+        <div style="font-weight:900;">精简版：你可以先记住这 3 点</div>
+        <ul class="bullets">${briefBullets}</ul>
 
-      ${secCopy ? `
-        <hr style="margin:16px 0;" />
-        <h3 style="margin:0 0 6px; font-size:16px;">次类型补充：${secCopy.title}</h3>
-        <div><b>${secCopy.one}</b></div>
-        <div style="margin-top:8px;">${secCopy.body}</div>
-      ` : ""}
+        <div style="margin-top:8px;">
+          <div style="font-weight:900;">${escapeHtml(c.brief.ctaTitle)}</div>
+          <div>${escapeHtml(c.brief.ctaText)}</div>
+        </div>
 
-      <hr style="margin:16px 0;" />
-      <div style="font-weight:800; margin-bottom:6px;">指标（Debug）</div>
-      <div class="mono">
+        <button class="ghost toggleBtn" data-toggle="${blockId}">${collapsedDefault ? "展开更多建议" : "收起"}</button>
+
+        <div id="${blockId}" style="display:${collapsedDefault ? "none" : "block"};">
+          ${full}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function wireToggles(){
+  document.querySelectorAll("button[data-toggle]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const id = btn.getAttribute("data-toggle");
+      const el = document.getElementById(id);
+      if (!el) return;
+      const isHidden = el.style.display === "none";
+      el.style.display = isHidden ? "block" : "none";
+      btn.textContent = isHidden ? "收起" : "展开更多建议";
+      if (isHidden) setTimeout(()=>el.scrollIntoView({ behavior:"smooth", block:"start" }), 80);
+    });
+  });
+}
+
+/**
+ * NEW: 保存结果为图片
+ * - capture ONLY the result panel (without the whole page)
+ * - download as PNG
+ */
+async function saveResultAsImage(){
+  const panel = document.getElementById("resultCapture");
+  if (!panel){
+    alert("没有找到结果区域，请先完成测试。");
+    return;
+  }
+  if (typeof html2canvas !== "function"){
+    alert("截图组件未加载成功，请检查网络或稍后重试。");
+    return;
+  }
+
+  // Temporarily hide debug for nicer image? ——按你的要求“其他不变”，所以不隐藏。
+  const prevScrollY = window.scrollY;
+
+  // Use higher scale for clarity
+  const canvas = await html2canvas(panel, {
+    backgroundColor: "#ffffff",
+    scale: Math.min(2, window.devicePixelRatio || 2),
+    useCORS: true
+  });
+
+  // Restore scroll (just in case)
+  window.scrollTo({ top: prevScrollY });
+
+  const dataUrl = canvas.toDataURL("image/png");
+  const a = document.createElement("a");
+  const ts = new Date();
+  const yyyy = ts.getFullYear();
+  const mm = String(ts.getMonth()+1).padStart(2,"0");
+  const dd = String(ts.getDate()).padStart(2,"0");
+  a.download = `Gathr_爱情需求卡_结果_${yyyy}${mm}${dd}.png`;
+  a.href = dataUrl;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function renderResult(res, ans){
+  const ix = res.indexes;
+
+  const header = `
+    <div id="resultCapture" class="captureWrap">
+      <div class="result">
+        <div style="margin-bottom:10px;">
+          <span class="pill">主类型：${res.main}</span>
+          ${res.secondary ? `<span class="pill">次类型：${res.secondary}</span>` : `<span class="pill">次类型：无</span>`}
+          <span class="pill">置信度：${res.confidence}</span>
+        </div>
+
+        <div style="font-weight:900; font-size:16px; margin-bottom:6px;">你的结果已生成（默认展示精简版建议）</div>
+        <div class="mini">提示：点“展开更多建议”，可以看到更详细的条件设置、互动节奏与雷区。</div>
+
+        ${renderTypeBlock(res.main, true, true)}
+        ${res.secondary ? renderTypeBlock(res.secondary, false, true) : ""}
+
+        ${ans.Q21 ? `<div class="divider"></div><div><b>你的开放回答：</b><br/>${escapeHtml(ans.Q21)}</div>` : ""}
+
+        <div class="divider"></div>
+        <div style="font-weight:800; margin-bottom:6px;">指标（Debug）</div>
+        <div class="mono">
 I_Energy=${ix.I_Energy.toFixed(2)}
 I_Companion=${ix.I_Companion.toFixed(1)} (w=${ix.w})
 I_Emotion=${ix.I_Emotion.toFixed(1)} (w=${ix.w})
 I_Life=${ix.I_Life.toFixed(1)} (w=${ix.w})
 I_Commit=${ix.I_Commit.toFixed(2)}
 note=${res.note}
-      </div>
+        </div>
 
-      ${ans.Q21 ? `<div style="margin-top:12px;"><b>你的开放回答：</b><br/>${escapeHtml(ans.Q21)}</div>` : ""}
+        <div class="mini" style="margin-top:10px;">
+          ✅ 你可以点击「清空重来」再次测试，或把这个页面直接静态部署给用户使用。
+        </div>
 
-      <div class="mini" style="margin-top:10px;">
-        ✅ 你可以点击「清空重来」再次测试，或把这个页面直接静态部署给用户使用。
+        <!-- NEW: capture action bar (included in image) -->
+        <div class="captureBar">
+          <div class="captureHint">想保存结果？点击右侧按钮即可生成 PNG 图片。</div>
+          <button class="secondary" id="btnSaveImage">保存结果为图片（PNG）</button>
+        </div>
       </div>
     </div>
   `;
-  out.innerHTML = html;
 
-  // 结果出来后把焦点滚到结果
+  out.innerHTML = header;
+  wireToggles();
+
+  // Wire save button
+  const btn = document.getElementById("btnSaveImage");
+  if (btn) btn.addEventListener("click", saveResultAsImage);
+
   setTimeout(()=>window.scrollTo({ top: document.body.scrollHeight, behavior:"smooth" }), 50);
 }
 
@@ -609,10 +895,7 @@ function resetAll(){
 
 document.getElementById("btnNext").addEventListener("click", goNext);
 document.getElementById("btnPrev").addEventListener("click", goPrev);
-
 document.getElementById("btnReset").addEventListener("click", resetAll);
-
-// 仅内测用：快速跳到最后一题
 document.getElementById("btnJumpToResult").addEventListener("click", ()=>{
   currentIndex = QUESTIONS.length - 1;
   renderQuestion();
