@@ -5,56 +5,319 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Gathr 爱情需求卡（测试版）</title>
   <style>
-    :root { --bd:#ddd; --text:#111; --muted:#666; --bg:#fff; --soft:#f6f6f6; }
-    body { font-family: system-ui, -apple-system, "PingFang SC", "Noto Sans SC", sans-serif; max-width: 860px; margin: 24px auto; padding: 0 16px; color:var(--text); background:var(--bg); line-height: 1.5; }
-    h1 { font-size: 22px; margin: 0 0 6px; }
-    .muted { color: var(--muted); font-size: 14px; margin-bottom: 14px; }
-    .shell { border:1px solid var(--bd); border-radius: 14px; padding: 14px; }
-    .topbar { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom: 10px; }
-    .step { font-size: 13px; color: var(--muted); }
-    .progressWrap { flex:1; display:flex; align-items:center; gap:10px; }
-    .progressOuter { height: 10px; background: var(--soft); border-radius: 999px; overflow:hidden; width:100%; border:1px solid var(--bd); }
-    .progressInner { height: 100%; width:0%; background:#111; }
-    .qcard { border:1px solid var(--bd); border-radius: 14px; padding: 16px; }
-    .qtitle { font-weight: 800; margin-bottom: 10px; font-size: 16px; }
-    .qhint { color: var(--muted); font-size: 13px; margin-top: -6px; margin-bottom: 10px; }
-    .opts { display:grid; gap: 10px; }
-    label.opt { display:flex; gap:10px; align-items:flex-start; cursor:pointer; padding:10px; border:1px solid var(--bd); border-radius: 12px; }
-    label.opt:hover { background:#fafafa; }
-    input[type="radio"] { margin-top: 3px; }
-    select, textarea { width: 100%; padding: 10px; border-radius: 12px; border: 1px solid #ccc; font-size: 14px; }
-    textarea { min-height: 110px; resize: vertical; }
-    .nav { display:flex; justify-content:space-between; gap:10px; margin-top: 12px; }
-    button { padding: 10px 14px; border-radius: 12px; border: 1px solid #222; background: #222; color: #fff; cursor: pointer; }
-    button.secondary { background:#fff; color:#222; }
-    button.ghost { background:#fff; color:#222; border:1px dashed #222; }
-    button:disabled { opacity:0.4; cursor:not-allowed; }
-    .mini { font-size: 12px; color: var(--muted); margin-top: 8px; }
-    .warn { color: #a00; font-weight: 700; margin-top: 10px; }
-    .result { border:2px solid #222; border-radius: 14px; padding: 16px; margin-top: 14px; background:#fff; }
-    .pill { display:inline-block; padding: 4px 10px; border-radius: 999px; border: 1px solid #222; margin-right: 8px; font-size: 13px; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 13px; background: #f6f6f6; padding: 10px; border-radius: 10px; overflow:auto; }
-    .footerActions { display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px; }
+    :root{
+      --bg:#f6f9ff;
+      --panel:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --bd:rgba(15,23,42,.10);
 
-    /* Result sections */
-    .secWrap { margin-top: 10px; }
-    .secTitle { font-weight: 900; margin: 12px 0 6px; }
-    .bullets { margin: 6px 0 0 18px; }
-    .ctaRow { display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px; }
-    .toggleBtn { margin-top: 10px; }
-    .divider { border-top:1px solid var(--bd); margin:14px 0; }
-    .badge { display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid var(--bd); font-size:12px; color:var(--muted); margin-left:8px; }
+      --blue:#2563eb;          /* 主蓝 */
+      --blue2:#60a5fa;         /* 浅蓝 */
+      --blueSoft:rgba(37,99,235,.10);
+      --shadow: 0 12px 30px rgba(15,23,42,.08);
+      --shadow2: 0 6px 16px rgba(15,23,42,.08);
 
-    /* NEW: screenshot-friendly helpers */
-    .captureWrap { padding: 10px; background:#fff; }
-    .captureBar { display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center; margin: 10px 0 0; }
-    .captureHint { font-size:12px; color:var(--muted); }
+      --radius:18px;
+      --radius2:14px;
+    }
+
+    * { box-sizing: border-box; }
+    body{
+      font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Noto Sans SC", sans-serif;
+      max-width: 920px;
+      margin: 22px auto;
+      padding: 0 16px 48px;
+      color: var(--text);
+      background: radial-gradient(1200px 420px at 20% -10%, rgba(96,165,250,.28), transparent 60%),
+                  radial-gradient(900px 380px at 90% 0%, rgba(37,99,235,.18), transparent 55%),
+                  var(--bg);
+      line-height: 1.55;
+    }
+
+    header{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:14px;
+      margin: 10px 0 14px;
+    }
+    h1{
+      font-size: 22px;
+      margin: 0;
+      letter-spacing: .2px;
+    }
+    .tagline{
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: 6px;
+    }
+    .brandPill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.7);
+      border: 1px solid var(--bd);
+      box-shadow: var(--shadow2);
+      font-size: 13px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .dot{
+      width: 10px; height: 10px; border-radius: 999px;
+      background: linear-gradient(180deg, var(--blue2), var(--blue));
+      box-shadow: 0 0 0 4px rgba(37,99,235,.14);
+    }
+
+    .shell{
+      background: rgba(255,255,255,.78);
+      border: 1px solid var(--bd);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      backdrop-filter: blur(8px);
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom: 10px;
+    }
+    .step{
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .progressWrap{
+      flex:1;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .progressOuter{
+      height: 10px;
+      background: rgba(15,23,42,.06);
+      border-radius: 999px;
+      overflow:hidden;
+      width: 100%;
+      border: 1px solid var(--bd);
+    }
+    .progressInner{
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--blue2), var(--blue));
+      border-radius: 999px;
+    }
+
+    .qcard{
+      background: var(--panel);
+      border: 1px solid var(--bd);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow2);
+    }
+    .qtitle{
+      font-weight: 900;
+      margin-bottom: 8px;
+      font-size: 16px;
+      letter-spacing: .2px;
+    }
+    .qhint{
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+
+    .opts{ display:grid; gap: 10px; }
+
+    label.opt{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      cursor:pointer;
+      padding: 12px;
+      border: 1px solid var(--bd);
+      border-radius: var(--radius2);
+      background: rgba(255,255,255,.9);
+      transition: transform .08s ease, border-color .12s ease, background .12s ease, box-shadow .12s ease;
+    }
+    label.opt:hover{
+      border-color: rgba(37,99,235,.35);
+      background: rgba(37,99,235,.04);
+      box-shadow: 0 8px 18px rgba(37,99,235,.08);
+      transform: translateY(-1px);
+    }
+    input[type="radio"]{
+      margin-top: 3px;
+      accent-color: var(--blue);
+      transform: scale(1.05);
+    }
+
+    select, textarea{
+      width: 100%;
+      padding: 12px 12px;
+      border-radius: var(--radius2);
+      border: 1px solid rgba(15,23,42,.18);
+      font-size: 14px;
+      background: #fff;
+      outline: none;
+      transition: box-shadow .12s ease, border-color .12s ease;
+    }
+    select:focus, textarea:focus{
+      border-color: rgba(37,99,235,.55);
+      box-shadow: 0 0 0 4px rgba(37,99,235,.14);
+    }
+    textarea{ min-height: 120px; resize: vertical; }
+
+    .nav{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      margin-top: 12px;
+    }
+
+    button{
+      padding: 11px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(15,23,42,.16);
+      background: linear-gradient(180deg, rgba(37,99,235,.95), rgba(29,78,216,.95));
+      color: #fff;
+      cursor: pointer;
+      font-weight: 700;
+      letter-spacing: .2px;
+      box-shadow: 0 10px 18px rgba(37,99,235,.18);
+      transition: transform .08s ease, box-shadow .12s ease, filter .12s ease;
+    }
+    button:hover{
+      filter: brightness(1.02);
+      box-shadow: 0 14px 24px rgba(37,99,235,.22);
+      transform: translateY(-1px);
+    }
+    button:active{ transform: translateY(0px); }
+
+    button.secondary{
+      background: rgba(255,255,255,.88);
+      color: var(--text);
+      border: 1px solid var(--bd);
+      box-shadow: 0 10px 18px rgba(15,23,42,.08);
+    }
+    button.secondary:hover{
+      box-shadow: 0 14px 24px rgba(15,23,42,.10);
+      filter:none;
+    }
+
+    button.ghost{
+      background: rgba(37,99,235,.06);
+      color: var(--blue);
+      border: 1px dashed rgba(37,99,235,.45);
+      box-shadow: none;
+    }
+    button.ghost:hover{
+      background: rgba(37,99,235,.10);
+      box-shadow: 0 10px 18px rgba(37,99,235,.10);
+    }
+
+    button:disabled{
+      opacity: .45;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    .mini{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    .warn{
+      color: #b42318;
+      background: rgba(244,63,94,.08);
+      border: 1px solid rgba(244,63,94,.18);
+      padding: 10px 12px;
+      border-radius: var(--radius2);
+      font-weight: 800;
+      margin-top: 10px;
+      display: none;
+    }
+
+    .footerActions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top: 12px;
+      justify-content: flex-end;
+    }
+
+    /* Result */
+    .captureWrap{ padding: 10px; background: transparent; }
+
+    .result{
+      background: var(--panel);
+      border: 1px solid rgba(37,99,235,.20);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(37,99,235,.25);
+      background: rgba(37,99,235,.06);
+      margin-right: 8px;
+      font-size: 13px;
+      color: #0b3aa6;
+      font-weight: 800;
+    }
+    .badge{
+      display:inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(37,99,235,.25);
+      background: rgba(37,99,235,.06);
+      font-size: 12px;
+      color: #0b3aa6;
+      margin-left: 8px;
+      font-weight: 800;
+    }
+
+    .divider{
+      border-top: 1px solid rgba(15,23,42,.10);
+      margin: 14px 0;
+    }
+
+    .bullets{ margin: 8px 0 0 18px; }
+    .secTitle{ font-weight: 900; margin: 12px 0 6px; }
+    .toggleBtn{ margin-top: 10px; }
+    .captureBar{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px dashed rgba(37,99,235,.25);
+    }
+    .captureHint{ font-size: 12px; color: var(--muted); }
   </style>
 </head>
 
 <body>
-  <h1>Gathr 爱情需求卡（测试版）</h1>
-  <div class="muted">一题一页 · 进度条 · 上一题 / 下一题 · 最后自动输出「主类型 + 次类型（若有）」</div>
+  <header>
+    <div>
+      <h1>Gathr 爱情需求卡（测试版）</h1>
+      <div class="tagline">一题一页 · 进度条 · 上一题 / 下一题 · 完成后生成「主类型 + 次类型（若有）」并可保存为图片</div>
+    </div>
+    <div class="brandPill"><span class="dot"></span> Gathr · Love Needs</div>
+  </header>
 
   <div class="shell">
     <div class="topbar">
@@ -84,7 +347,7 @@
     </div>
   </div>
 
-  <!-- NEW: html2canvas for saving result as image (static deploy friendly) -->
+  <!-- html2canvas for saving result as image -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <script>
@@ -364,7 +627,7 @@ const COPY = {
 
 /**
  * =========================
- * 3) 计分规则（v2.0）
+ * 3) 计分规则（v2.0）——不变
  * =========================
  */
 function mapABCTo135(v){ return v==="A"?1 : v==="B"?3 : 5; }
@@ -504,7 +767,7 @@ function judgeType(ans){
 const questionArea = document.getElementById("questionArea");
 const stepText = document.getElementById("stepText");
 const progressInner = document.getElementById("progressInner");
-const warn = document.getElementById("warn");
+const warnEl = document.getElementById("warn");
 const out = document.getElementById("out");
 const miniHint = document.getElementById("miniHint");
 
@@ -547,8 +810,18 @@ function renderProgress(){
   miniHint.textContent = `已完成必填：${done}/${req}（${pct}%）`;
 }
 
+function showWarn(msg){
+  if (!msg){
+    warnEl.style.display = "none";
+    warnEl.textContent = "";
+    return;
+  }
+  warnEl.style.display = "block";
+  warnEl.textContent = msg;
+}
+
 function renderQuestion(){
-  warn.textContent = "";
+  showWarn("");
   out.innerHTML = "";
 
   const q = QUESTIONS[currentIndex];
@@ -683,10 +956,10 @@ function validateCurrent(){
 }
 
 function goNext(){
-  warn.textContent = "";
+  showWarn("");
 
   if (!validateCurrent()){
-    warn.textContent = "⚠️ 这一题还没选完哦。";
+    showWarn("⚠️ 这一题还没选完哦。");
     return;
   }
 
@@ -701,12 +974,12 @@ function goNext(){
     const res = judgeType(answers);
     renderResult(res, answers);
   }catch(e){
-    warn.textContent = `⚠️ ${e.message || String(e)}`;
+    showWarn(`⚠️ ${e.message || String(e)}`);
   }
 }
 
 function goPrev(){
-  warn.textContent = "";
+  showWarn("");
   if (currentIndex > 0){
     currentIndex--;
     renderQuestion();
@@ -752,17 +1025,17 @@ function renderTypeBlock(typeCode, isMain, collapsedDefault=true){
       <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
         <div>
           <div style="font-weight:900; font-size:16px;">${escapeHtml(c.title)} <span class="badge">${badge}</span></div>
-          <div style="margin-top:6px;"><b>${escapeHtml(c.one)}</b></div>
+          <div style="margin-top:8px;"><b>${escapeHtml(c.one)}</b></div>
         </div>
       </div>
 
-      <div style="margin-top:10px;">
+      <div style="margin-top:12px;">
         <div style="font-weight:900;">精简版：你可以先记住这 3 点</div>
         <ul class="bullets">${briefBullets}</ul>
 
-        <div style="margin-top:8px;">
-          <div style="font-weight:900;">${escapeHtml(c.brief.ctaTitle)}</div>
-          <div>${escapeHtml(c.brief.ctaText)}</div>
+        <div style="margin-top:10px; padding:12px; border:1px solid rgba(37,99,235,.18); background: rgba(37,99,235,.06); border-radius: var(--radius2);">
+          <div style="font-weight:900; color:#0b3aa6;">${escapeHtml(c.brief.ctaTitle)}</div>
+          <div style="margin-top:4px;">${escapeHtml(c.brief.ctaText)}</div>
         </div>
 
         <button class="ghost toggleBtn" data-toggle="${blockId}">${collapsedDefault ? "展开更多建议" : "收起"}</button>
@@ -790,9 +1063,8 @@ function wireToggles(){
 }
 
 /**
- * NEW: 保存结果为图片
- * - capture ONLY the result panel (without the whole page)
- * - download as PNG
+ * 保存结果为图片（PNG）
+ * - 截图区域：#resultCapture（不包含整个页面）
  */
 async function saveResultAsImage(){
   const panel = document.getElementById("resultCapture");
@@ -805,17 +1077,14 @@ async function saveResultAsImage(){
     return;
   }
 
-  // Temporarily hide debug for nicer image? ——按你的要求“其他不变”，所以不隐藏。
   const prevScrollY = window.scrollY;
 
-  // Use higher scale for clarity
   const canvas = await html2canvas(panel, {
-    backgroundColor: "#ffffff",
+    backgroundColor: null,
     scale: Math.min(2, window.devicePixelRatio || 2),
     useCORS: true
   });
 
-  // Restore scroll (just in case)
   window.scrollTo({ top: prevScrollY });
 
   const dataUrl = canvas.toDataURL("image/png");
@@ -832,8 +1101,6 @@ async function saveResultAsImage(){
 }
 
 function renderResult(res, ans){
-  const ix = res.indexes;
-
   const header = `
     <div id="resultCapture" class="captureWrap">
       <div class="result">
@@ -851,22 +1118,6 @@ function renderResult(res, ans){
 
         ${ans.Q21 ? `<div class="divider"></div><div><b>你的开放回答：</b><br/>${escapeHtml(ans.Q21)}</div>` : ""}
 
-        <div class="divider"></div>
-        <div style="font-weight:800; margin-bottom:6px;">指标（Debug）</div>
-        <div class="mono">
-I_Energy=${ix.I_Energy.toFixed(2)}
-I_Companion=${ix.I_Companion.toFixed(1)} (w=${ix.w})
-I_Emotion=${ix.I_Emotion.toFixed(1)} (w=${ix.w})
-I_Life=${ix.I_Life.toFixed(1)} (w=${ix.w})
-I_Commit=${ix.I_Commit.toFixed(2)}
-note=${res.note}
-        </div>
-
-        <div class="mini" style="margin-top:10px;">
-          ✅ 你可以点击「清空重来」再次测试，或把这个页面直接静态部署给用户使用。
-        </div>
-
-        <!-- NEW: capture action bar (included in image) -->
         <div class="captureBar">
           <div class="captureHint">想保存结果？点击右侧按钮即可生成 PNG 图片。</div>
           <button class="secondary" id="btnSaveImage">保存结果为图片（PNG）</button>
@@ -878,7 +1129,6 @@ note=${res.note}
   out.innerHTML = header;
   wireToggles();
 
-  // Wire save button
   const btn = document.getElementById("btnSaveImage");
   if (btn) btn.addEventListener("click", saveResultAsImage);
 
@@ -890,7 +1140,7 @@ function resetAll(){
   currentIndex = 0;
   renderQuestion();
   out.innerHTML = "";
-  warn.textContent = "";
+  showWarn("");
 }
 
 document.getElementById("btnNext").addEventListener("click", goNext);
