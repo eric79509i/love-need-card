@@ -1,147 +1,178 @@
 <!doctype html>
-<html lang="zh-Hant">
+<html lang="zh-Hans">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Gathr 愛情需求卡（測試版）</title>
+  <title>Gathr 爱情需求卡（测试版）</title>
   <style>
-    body { font-family: system-ui, -apple-system, "PingFang TC", "Noto Sans TC", sans-serif; max-width: 860px; margin: 24px auto; padding: 0 16px; line-height: 1.5; }
-    h1 { font-size: 22px; margin: 0 0 8px; }
-    .muted { color: #666; font-size: 14px; margin-bottom: 16px; }
-    .card { border: 1px solid #ddd; border-radius: 12px; padding: 14px 14px 10px; margin: 12px 0; }
-    .qtitle { font-weight: 700; margin-bottom: 8px; }
-    .opts { display: grid; gap: 8px; }
-    label { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; }
+    :root { --bd:#ddd; --text:#111; --muted:#666; --bg:#fff; --soft:#f6f6f6; }
+    body { font-family: system-ui, -apple-system, "PingFang SC", "Noto Sans SC", sans-serif; max-width: 860px; margin: 24px auto; padding: 0 16px; color:var(--text); background:var(--bg); line-height: 1.5; }
+    h1 { font-size: 22px; margin: 0 0 6px; }
+    .muted { color: var(--muted); font-size: 14px; margin-bottom: 14px; }
+    .shell { border:1px solid var(--bd); border-radius: 14px; padding: 14px; }
+    .topbar { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom: 10px; }
+    .step { font-size: 13px; color: var(--muted); }
+    .progressWrap { flex:1; display:flex; align-items:center; gap:10px; }
+    .progressOuter { height: 10px; background: var(--soft); border-radius: 999px; overflow:hidden; width:100%; border:1px solid var(--bd); }
+    .progressInner { height: 100%; width:0%; background:#111; }
+    .qcard { border:1px solid var(--bd); border-radius: 14px; padding: 16px; }
+    .qtitle { font-weight: 800; margin-bottom: 10px; font-size: 16px; }
+    .qhint { color: var(--muted); font-size: 13px; margin-top: -6px; margin-bottom: 10px; }
+    .opts { display:grid; gap: 10px; }
+    label.opt { display:flex; gap:10px; align-items:flex-start; cursor:pointer; padding:10px; border:1px solid var(--bd); border-radius: 12px; }
+    label.opt:hover { background:#fafafa; }
     input[type="radio"] { margin-top: 3px; }
-    select, textarea { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #ccc; font-size: 14px; }
-    textarea { min-height: 80px; resize: vertical; }
-    .row { display: flex; gap: 12px; flex-wrap: wrap; }
-    .btns { display: flex; gap: 10px; margin: 18px 0; }
-    button { padding: 10px 14px; border-radius: 10px; border: 1px solid #222; background: #222; color: #fff; cursor: pointer; }
-    button.secondary { background: #fff; color: #222; }
-    .result { border: 2px solid #222; border-radius: 14px; padding: 16px; margin-top: 18px; }
+    select, textarea { width: 100%; padding: 10px; border-radius: 12px; border: 1px solid #ccc; font-size: 14px; }
+    textarea { min-height: 110px; resize: vertical; }
+    .nav { display:flex; justify-content:space-between; gap:10px; margin-top: 12px; }
+    button { padding: 10px 14px; border-radius: 12px; border: 1px solid #222; background: #222; color: #fff; cursor: pointer; }
+    button.secondary { background:#fff; color:#222; }
+    button:disabled { opacity:0.4; cursor:not-allowed; }
+    .mini { font-size: 12px; color: var(--muted); margin-top: 8px; }
+    .warn { color: #a00; font-weight: 700; margin-top: 10px; }
+    .result { border:2px solid #222; border-radius: 14px; padding: 16px; margin-top: 14px; }
     .pill { display:inline-block; padding: 4px 10px; border-radius: 999px; border: 1px solid #222; margin-right: 8px; font-size: 13px; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 13px; background: #f6f6f6; padding: 10px; border-radius: 10px; overflow:auto; }
-    .warn { color: #a00; font-weight: 600; }
+    .footerActions { display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px; }
   </style>
 </head>
+
 <body>
-  <h1>Gathr 愛情需求卡（測試版）</h1>
-  <div class="muted">約 7–8 分鐘 · 21 題 · 測完會輸出「主類型 + 次類型（若有）」</div>
+  <h1>Gathr 爱情需求卡（测试版）</h1>
+  <div class="muted">一题一页 · 进度条 · 上一题 / 下一题 · 最后自动输出「主类型 + 次类型（若有）」</div>
 
-  <div id="app"></div>
+  <div class="shell">
+    <div class="topbar">
+      <div class="step" id="stepText">第 1 / 21 题</div>
+      <div class="progressWrap">
+        <div class="progressOuter" aria-label="progress">
+          <div class="progressInner" id="progressInner"></div>
+        </div>
+      </div>
+    </div>
 
-  <div class="btns">
-    <button id="btnCalc">計算結果</button>
-    <button class="secondary" id="btnReset">清空重來</button>
+    <div id="questionArea"></div>
+
+    <div class="nav">
+      <button class="secondary" id="btnPrev">上一题</button>
+      <button id="btnNext">下一题</button>
+    </div>
+
+    <div class="mini" id="miniHint"></div>
+    <div class="warn" id="warn"></div>
+
+    <div id="out"></div>
+
+    <div class="footerActions">
+      <button class="secondary" id="btnReset">清空重来</button>
+      <button class="secondary" id="btnJumpToResult" title="仅用于内测：跳到最后一题">跳到最后</button>
+    </div>
   </div>
-
-  <div id="out"></div>
 
 <script>
 /**
  * =========================
- * 1) 題庫（v1.1）
+ * 1) 题库（v1.1）
  * =========================
- * 類型：
+ * 类型：
  * - scale: 1~5
- * - single: 單選（radio）
- * - bool: 是/否
- * - text: 開放題
+ * - single: 单选（radio）
+ * - bool: 是/否（radio）
+ * - text: 开放题（可选）
  */
 const QUESTIONS = [
   // 第一段（4）
   { id:"Q1", type:"scale", title:"Q1 目前在你的人生中，「感情」的重要程度是？", labels:["1 不重要","2","3","4","5 非常重要"] },
-  { id:"Q2", type:"single", title:"Q2 如果一段關係需要你穩定投入時間與心力，你的第一反應是？",
-    options:[["A","現在不太行"],["B","可以，但會有壓力"],["C","沒問題，我有餘裕"]] },
-  { id:"Q3", type:"single", title:"Q3 如果短期內沒有發展出關係，你會？",
-    options:[["A","鬆一口氣"],["B","有點可惜，但能接受"],["C","會明顯失落"]] },
-  { id:"Q4", type:"bool", title:"Q4 你是否認同：『我現在的人生重心，可能暫時放不下一段需要被認真對待的關係。』" },
+  { id:"Q2", type:"single", title:"Q2 如果一段关系需要你稳定投入时间与心力，你的第一反应是？",
+    options:[["A","现在不太行"],["B","可以，但会有压力"],["C","没问题，我有余裕"]] },
+  { id:"Q3", type:"single", title:"Q3 如果短期内没有发展出关系，你会？",
+    options:[["A","松一口气"],["B","有点可惜，但能接受"],["C","会明显失落"]] },
+  { id:"Q4", type:"bool", title:"Q4 你是否认同：『我现在的人生重心，可能暂时放不下一段需要被认真对待的关系。』" },
 
   // 第二段（6）
-  { id:"Q5", type:"single", title:"Q5（強制單選）如果只能選一個，你現在最希望關係帶來的是？",
-    options:[["A","生活中不要那麼孤單（一起吃飯、玩、出門）"],["B","被在乎、被回應、被放在心上"],["C","有人可以一起把生活過好"],["D","我現在說不清楚"]] },
-  { id:"Q6", type:"scale", title:"Q6 你對「週末是否有人一起安排活動」的在意程度？", labels:["1 完全不在意","2","3","4","5 非常在意"] },
-  { id:"Q7", type:"scale", title:"Q7 你對「情緒是否被穩定回應」的在意程度？", labels:["1 不需要","2","3","4","5 非常需要"] },
-  { id:"Q8", type:"scale", title:"Q8 你對「一起規劃生活（居住、作息、未來）」的在意程度？", labels:["1 完全沒想過","2","3","4","5 非常在意"] },
-  { id:"Q9", type:"single", title:"Q9（二選一）如果只能選一個，你更在意？",
-    options:[["A","關係能不能自然融入生活"],["B","情緒有沒有被穩定接住"]] },
-  { id:"Q10", type:"single", title:"Q10 當你情緒低落時，你更希望對方？",
-    options:[["A","陪我做點事、轉移注意力"],["B","聽我說、理解我的感受"],["C","用實際行動支持我"]] },
+  { id:"Q5", type:"single", title:"Q5（强制单选）如果只能选一个，你现在最希望关系带来的是？",
+    options:[["A","生活中不要那么孤单（一起吃饭、玩、出门）"],["B","被在乎、被回应、被放在心上"],["C","有人可以一起把生活过好"],["D","我现在说不清楚"]] },
+  { id:"Q6", type:"scale", title:"Q6 你对「周末是否有人一起安排活动」的在意程度？", labels:["1 完全不在意","2","3","4","5 非常在意"] },
+  { id:"Q7", type:"scale", title:"Q7 你对「情绪是否被稳定回应」的在意程度？", labels:["1 不需要","2","3","4","5 非常需要"] },
+  { id:"Q8", type:"scale", title:"Q8 你对「一起规划生活（居住、作息、未来）」的在意程度？", labels:["1 完全没想过","2","3","4","5 非常在意"] },
+  { id:"Q9", type:"single", title:"Q9（二选一）如果只能选一个，你更在意？",
+    options:[["A","关系能不能自然融入生活"],["B","情绪有没有被稳定接住"]] },
+  { id:"Q10", type:"single", title:"Q10 当你情绪低落时，你更希望对方？",
+    options:[["A","陪我做点事、转移注意力"],["B","听我说、理解我的感受"],["C","用实际行动支持我"]] },
 
   // 第三段（6）
-  { id:"Q11", type:"single", title:"Q11 如果關係需要你調整生活習慣（作息、時間），你會？",
-    options:[["A","盡量不調整"],["B","可以微調"],["C","願意認真協調"]] },
-  { id:"Q12", type:"scale", title:"Q12 你是否願意為了關係，減少部分個人自由時間？", labels:["1 完全不願意","2","3","4","5 非常願意"] },
-  { id:"Q13", type:"single", title:"Q13 關於「住在一起」這件事，你目前的感覺？",
-    options:[["A","完全不在考慮範圍"],["B","未來可能，但不是現在"],["C","是我會認真思考的事"]] },
-  { id:"Q14", type:"single", title:"Q14 你是否認同：『只要有情感連結，不一定要常見面或一起生活。』",
-    options:[["H","非常認同"],["M","有點認同"],["L","不太認同"]] },
-  { id:"Q15", type:"single", title:"Q15 你是否認同：『如果關係穩定，我會希望它自然走進我的日常生活。』",
-    options:[["H","非常認同"],["M","有點認同"],["L","不太認同"]] },
-  { id:"Q16", type:"single", title:"Q16 當關係遇到現實壓力（時間、距離、家庭），你通常會？",
-    options:[["A","優先保護自己的生活"],["B","嘗試協調看看"],["C","會把關係納入重要考量"]] },
+  { id:"Q11", type:"single", title:"Q11 如果关系需要你调整生活习惯（作息、时间），你会？",
+    options:[["A","尽量不调整"],["B","可以微调"],["C","愿意认真协调"]] },
+  { id:"Q12", type:"scale", title:"Q12 你是否愿意为了关系，减少部分个人自由时间？", labels:["1 完全不愿意","2","3","4","5 非常愿意"] },
+  { id:"Q13", type:"single", title:"Q13 关于「住在一起」这件事，你目前的感觉？",
+    options:[["A","完全不在考虑范围"],["B","未来可能，但不是现在"],["C","是我会认真思考的事"]] },
+  { id:"Q14", type:"single", title:"Q14 你是否认同：『只要有情感连结，不一定要常见面或一起生活。』",
+    options:[["H","非常认同"],["M","有点认同"],["L","不太认同"]] },
+  { id:"Q15", type:"single", title:"Q15 你是否认同：『如果关系稳定，我会希望它自然走进我的日常生活。』",
+    options:[["H","非常认同"],["M","有点认同"],["L","不太认同"]] },
+  { id:"Q16", type:"single", title:"Q16 当关系遇到现实压力（时间、距离、家庭），你通常会？",
+    options:[["A","优先保护自己的生活"],["B","尝试协调看看"],["C","会把关系纳入重要考量"]] },
 
   // 第四段（5）
-  { id:"Q17", type:"single", title:"Q17 你目前的狀態更接近？",
-    options:[["A","穩定但忙碌"],["B","正在經歷轉折或調整期"],["C","狀態穩定，想認真投入關係"]] },
-  { id:"Q18", type:"bool", title:"Q18 你是否認同：『我現在更想認識人，而不是立刻確定關係。』" },
-  { id:"Q19", type:"scale", title:"Q19 你目前對「長期關係」的心理準備度？", labels:["1 幾乎沒有","2","3","4","5 很高"] },
-  { id:"Q20", type:"scale", title:"Q20 你對關係「不確定性」的容忍度？", labels:["1 非常低","2","3","4","5 非常高"] },
-  { id:"Q21", type:"text",  title:"Q21（可選）你希望現在的關係，為你的人生帶來什麼？" }
+  { id:"Q17", type:"single", title:"Q17 你目前的状态更接近？",
+    options:[["A","稳定但忙碌"],["B","正在经历转折或调整期"],["C","状态稳定，想认真投入关系"]] },
+  { id:"Q18", type:"bool", title:"Q18 你是否认同：『我现在更想认识人，而不是立刻确定关系。』" },
+  { id:"Q19", type:"scale", title:"Q19 你目前对「长期关系」的心理准备度？", labels:["1 几乎没有","2","3","4","5 很高"] },
+  { id:"Q20", type:"scale", title:"Q20 你对关系「不确定性」的容忍度？", labels:["1 非常低","2","3","4","5 非常高"] },
+  { id:"Q21", type:"text",  title:"Q21（可选）你希望现在的关系，为你的人生带来什么？", optional:true }
 ];
 
 /**
  * =========================
- * 2) 類型文案（最終輸出）
+ * 2) 类型文案（最终输出）
  * =========================
  */
 const COPY = {
   T1: {
-    title: "T1｜關係暫緩型：現在的人生，真的已經很滿了",
-    one: "你不是不重視感情，而是你現在的人生，暫時裝不下一段需要被認真對待的關係。",
-    body: "你目前的能量與生活重心，更多放在其他重要的事情上。這並不代表你不適合戀愛，而是你很清楚自己的邊界，也不想勉強開始一段無法好好經營的關係。",
-    tip: "現在不進入關係，本身也是一種對自己和他人的負責。等人生空間松動時，你會更清楚自己要什麼。"
+    title: "T1｜关系暂缓型：现在的人生，真的已经很满了",
+    one: "你不是不重视感情，而是你现在的人生，暂时装不下一段需要被认真对待的关系。",
+    body: "你目前的能量与生活重心，更多放在其他重要的事情上。这并不代表你不适合恋爱，而是你很清楚自己的边界，也不想勉强开始一段无法好好经营的关系。",
+    tip: "现在不进入关系，本身也是一种对自己和他人的负责。等人生空间松动时，你会更清楚自己要什么。"
   },
   T2: {
-    title: "T2｜低密度連結型：想要有人一起，但不想被關係占滿",
-    one: "你希望關係自然地發生在生活裡，而不是成為壓力來源。",
-    body: "你在意的是陪伴感與生活體驗：一起吃飯、出門、旅行，讓生活不那麼孤單。你並不排斥情感，但不希望關係要求你過度調整現有的人生節奏。",
-    tip: "對你來說，好的關係應該是加分，而不是負擔。找到節奏相近的人，比談得很深更重要。"
+    title: "T2｜低密度连结型：想要有人一起，但不想被关系占满",
+    one: "你希望关系自然地发生在生活里，而不是成为压力来源。",
+    body: "你在意的是陪伴感与生活体验：一起吃饭、出门、旅行，让生活不那么孤单。你并不排斥情感，但不希望关系要求你过度调整现有的人生节奏。",
+    tip: "对你来说，好的关系应该是加分，而不是负担。找到节奏相近的人，比谈得很深更重要。"
   },
   T3: {
-    title: "T3｜情感補位型：我想被在乎、被回應",
-    one: "你真正重視的，是情緒有沒有被認真對待。",
-    body: "你希望在關係中感受到穩定的情感連結。不一定要天天見面，但你很在意對方是否願意理解你、回應你、把你放在心上。",
-    tip: "你需要的是情感上的可靠，而不是形式上的熱鬧。當對方能接住你時，你會非常投入。"
+    title: "T3｜情感补位型：我想被在乎、被回应",
+    one: "你真正重视的，是情绪有没有被认真对待。",
+    body: "你希望在关系中感受到稳定的情感连结。不一定要天天见面，但你很在意对方是否愿意理解你、回应你、把你放在心上。",
+    tip: "你需要的是情感上的可靠，而不是形式上的热闹。当对方能接住你时，你会非常投入。"
   },
   T4: {
-    title: "T4｜生活夥伴型：我想要的是，一起把日子過好",
-    one: "你期待關係能真正走進生活，而不是只停在感覺。",
-    body: "你開始在意現實層面的協作：生活安排、時間分配、未來規劃。情感不一定要濃烈，但關係要穩定、好溝通、能一起面對現實。",
-    tip: "對你來說，適不適合往往比愛不愛更重要。你適合能和你並肩生活的人。"
+    title: "T4｜生活伙伴型：我想要的是，一起把日子过好",
+    one: "你期待关系能真正走进生活，而不是只停在感觉。",
+    body: "你开始在意现实层面的协作：生活安排、时间分配、未来规划。情感不一定要浓烈，但关系要稳定、好沟通、能一起面对现实。",
+    tip: "对你来说，适不适合往往比爱不爱更重要。你适合能和你并肩生活的人。"
   },
   T5: {
-    title: "T5｜認真投入型：我已準備好，把關係放進人生規劃",
-    one: "你願意為了合適的關係，調整自己的人生。",
-    body: "你對親密關係有明確期待，也有足夠的心理準備。你希望關係是長期的，並且能成為人生的重要組成部分。",
-    tip: "你適合同樣認真、清楚自己要什麼的人。慢一點沒關係，但方向要一致。"
+    title: "T5｜认真投入型：我已准备好，把关系放进人生规划",
+    one: "你愿意为了合适的关系，调整自己的人生。",
+    body: "你对亲密关系有明确期待，也有足够的心理准备。你希望关系是长期的，并且能成为人生的重要组成部分。",
+    tip: "你适合同样认真、清楚自己要什么的人。慢一点没关系，但方向要一致。"
   },
   T6: {
-    title: "T6｜探索過渡型：我正在重新認識自己",
-    one: "你現在更重要的，不是定義關係，而是確認自己。",
-    body: "你正處在人生或情感的轉折階段。你願意認識人、交流、嘗試，但還不急著給關係下定義。",
-    tip: "探索不是逃避，而是一種對未來更負責任的準備。當你準備好時，你會更笃定。"
+    title: "T6｜探索过渡型：我正在重新认识自己",
+    one: "你现在更重要的，不是定义关系，而是确认自己。",
+    body: "你正处在人生或情感的转折阶段。你愿意认识人、交流、尝试，但还不急着给关系下定义。",
+    tip: "探索不是逃避，而是一种对未来更负责的准备。当你准备好时，你会更笃定。"
   }
 };
 
 /**
  * =========================
- * 3) 計分規則（v2.0）
+ * 3) 计分规则（v2.0）
  * =========================
- * 指標：
+ * 指标：
  * - I_Energy: 1~5 avg
- * - I_Companion/I_Emotion/I_Life: 0~20 sum (Q5權重 0.8 若選D)
+ * - I_Companion/I_Emotion/I_Life: 0~20 sum (Q5权重 0.8 若选D)
  * - I_Commit: 1~5 avg
  */
 
@@ -150,9 +181,9 @@ function mapBoolTo15(v){ return v===true?1 : 5; } // Q4: 是=1, 否=5
 function mapHMLTo531(v){ return v==="H"?5 : v==="M"?3 : 1; }
 
 function calcIndexes(ans){
-  // Required checks
+  // Required checks（除Q21外都必须）
   for (const q of QUESTIONS){
-    if (q.type==="text") continue; // optional
+    if (q.id === "Q21") continue; // optional
     if (ans[q.id] === undefined || ans[q.id] === null || ans[q.id] === "") {
       throw new Error(`尚未完成：${q.id}`);
     }
@@ -162,12 +193,13 @@ function calcIndexes(ans){
   const q1 = +ans.Q1;
   const q2v = mapABCTo135(ans.Q2);
   const q3v = mapABCTo135(ans.Q3);
-  const q4v = mapBoolTo15(ans.Q4); // 是/否
+  const q4v = mapBoolTo15(ans.Q4);
   const I_Energy = (q1 + q2v + q3v + q4v) / 4;
 
-  // raw function scores (0~20)
+  // weight
   const w = (ans.Q5 === "D") ? 0.8 : 1.0;
 
+  // function scores
   const I_Companion_raw =
     (ans.Q5 === "A" ? 5 : 0) +
     (+ans.Q6) +
@@ -204,7 +236,7 @@ function calcIndexes(ans){
 function judgeType(ans){
   const ix = calcIndexes(ans);
 
-  // Early Exit: T1 (任兩條)
+  // Early Exit: T1（任两条）
   const t1Signals = [
     ix.I_Energy <= 2.5,
     ans.Q4 === true,
@@ -218,11 +250,11 @@ function judgeType(ans){
       secondary: null,
       confidence: "高",
       indexes: ix,
-      note: `T1 early-exit（命中 ${t1Signals} 條）`
+      note: `T1 early-exit（命中 ${t1Signals} 条）`
     };
   }
 
-  // 主軸功能排序
+  // 主轴功能排序
   const func = [
     ["I_Companion", ix.I_Companion],
     ["I_Emotion", ix.I_Emotion],
@@ -255,38 +287,32 @@ function judgeType(ans){
     else if (mainFunc === "I_Emotion" && ix.I_Commit >= 2.5 && ix.I_Commit < 4) main = "T3";
     else if (mainFunc === "I_Life" && ix.I_Commit >= 3) main = "T4";
     else {
-      // fallback：用主軸直接映射（避免卡死）
       main = (mainFunc === "I_Companion") ? "T2" : (mainFunc === "I_Emotion") ? "T3" : "T4";
     }
   }
 
-  // 次型
+  // 次型（主次并行）
   let secondary = null;
   const secondClose = (mainFuncScore - secondFuncScore) <= 3;
   if (ix.I_Commit >= 3 && secondClose){
     secondary = (secondFunc === "I_Companion") ? "T2" : (secondFunc === "I_Emotion") ? "T3" : "T4";
-    // 避免主次相同
     if (secondary === main) secondary = null;
   }
 
-  // T6 可作为主或次：这里采用「如果允许T6，则作为次型优先」的温柔策略
-  // 解释：探索期通常不想被贴主标签；除非主型置信度很低。
-  let note = `主軸=${mainFunc}(${mainFuncScore.toFixed(1)}), 次軸=${secondFunc}(${secondFuncScore.toFixed(1)}), I_Commit=${ix.I_Commit.toFixed(2)}`;
-  let confidence = "中";
-
   // 置信度：主轴领先越多越高
+  let confidence = "中";
   const lead = mainFuncScore - secondFuncScore;
   if (lead >= 6) confidence = "高";
   else if (lead <= 2) confidence = "低";
 
+  let note = `主轴=${mainFunc}(${mainFuncScore.toFixed(1)}), 次轴=${secondFunc}(${secondFuncScore.toFixed(1)}), I_Commit=${ix.I_Commit.toFixed(2)}`;
+
+  // T6 作为“状态标签”优先放次型（更温柔）
   if (allowT6){
-    // 若本来就有次型，T6 作为「补充状态标签」输出到 note；或把次型替换成 T6（可选策略）
-    // 这里：若 lead 很低（<=2），直接让 T6 成为次型；否则放到备注，不强推。
     if (lead <= 2){
       secondary = "T6";
     } else {
-      note += "｜T6條件成立（狀態探索），未覆蓋主型";
-      // 也可以选择：如果用户更想认识人（Q18=是），把次型设为T6
+      note += "｜T6条件成立（状态探索），未覆盖主型";
       if (ans.Q18 === true) secondary = "T6";
     }
   }
@@ -296,150 +322,20 @@ function judgeType(ans){
 
 /**
  * =========================
- * 4) UI 渲染
+ * 4) 一题一页 UI
  * =========================
  */
-const app = document.getElementById("app");
+const questionArea = document.getElementById("questionArea");
+const stepText = document.getElementById("stepText");
+const progressInner = document.getElementById("progressInner");
+const warn = document.getElementById("warn");
 const out = document.getElementById("out");
+const miniHint = document.getElementById("miniHint");
 
-function render(){
-  app.innerHTML = "";
-  QUESTIONS.forEach(q=>{
-    const card = document.createElement("div");
-    card.className = "card";
-    const title = document.createElement("div");
-    title.className = "qtitle";
-    title.textContent = q.title;
-    card.appendChild(title);
+let currentIndex = 0;
 
-    const opts = document.createElement("div");
-    opts.className = "opts";
-
-    if (q.type === "scale"){
-      // dropdown 1-5
-      const sel = document.createElement("select");
-      sel.name = q.id;
-      const op0 = document.createElement("option");
-      op0.value = "";
-      op0.textContent = "請選擇…";
-      sel.appendChild(op0);
-      for (let i=1;i<=5;i++){
-        const op = document.createElement("option");
-        op.value = String(i);
-        op.textContent = q.labels ? q.labels[i-1] : String(i);
-        sel.appendChild(op);
-      }
-      opts.appendChild(sel);
-    }
-
-    if (q.type === "single"){
-      q.options.forEach(([val, labelText])=>{
-        const lab = document.createElement("label");
-        const r = document.createElement("input");
-        r.type = "radio";
-        r.name = q.id;
-        r.value = val;
-        const sp = document.createElement("span");
-        sp.textContent = `${val}. ${labelText}`;
-        lab.appendChild(r);
-        lab.appendChild(sp);
-        opts.appendChild(lab);
-      });
-    }
-
-    if (q.type === "bool"){
-      [["yes","是"],["no","否"]].forEach(([val, text])=>{
-        const lab = document.createElement("label");
-        const r = document.createElement("input");
-        r.type = "radio";
-        r.name = q.id;
-        r.value = val;
-        const sp = document.createElement("span");
-        sp.textContent = text;
-        lab.appendChild(r);
-        lab.appendChild(sp);
-        opts.appendChild(lab);
-      });
-    }
-
-    if (q.type === "text"){
-      const ta = document.createElement("textarea");
-      ta.name = q.id;
-      ta.placeholder = "可不填。一句話就好。";
-      opts.appendChild(ta);
-    }
-
-    card.appendChild(opts);
-    app.appendChild(card);
-  });
-}
-
-function readAnswers(){
-  const ans = {};
-  QUESTIONS.forEach(q=>{
-    if (q.type === "scale"){
-      const sel = app.querySelector(`select[name="${q.id}"]`);
-      ans[q.id] = sel.value ? Number(sel.value) : "";
-    } else if (q.type === "single"){
-      const r = app.querySelector(`input[name="${q.id}"]:checked`);
-      ans[q.id] = r ? r.value : "";
-    } else if (q.type === "bool"){
-      const r = app.querySelector(`input[name="${q.id}"]:checked`);
-      ans[q.id] = r ? (r.value === "yes") : "";
-    } else if (q.type === "text"){
-      const ta = app.querySelector(`textarea[name="${q.id}"]`);
-      ans[q.id] = ta.value || "";
-    }
-  });
-  return ans;
-}
-
-function typeToName(t){
-  return COPY[t]?.title || t;
-}
-
-function renderResult(res, ans){
-  const mainCopy = COPY[res.main];
-  const secCopy = res.secondary ? COPY[res.secondary] : null;
-
-  const ix = res.indexes;
-  const html = `
-    <div class="result">
-      <div style="margin-bottom:10px;">
-        <span class="pill">主類型：${res.main}</span>
-        ${res.secondary ? `<span class="pill">次類型：${res.secondary}</span>` : `<span class="pill">次類型：無</span>`}
-        <span class="pill">置信度：${res.confidence}</span>
-      </div>
-
-      <h2 style="margin:8px 0 6px; font-size:18px;">${mainCopy.title}</h2>
-      <div><b>${mainCopy.one}</b></div>
-      <div style="margin-top:8px;">${mainCopy.body}</div>
-      <div style="margin-top:10px;"><i>溫柔提醒：</i>${mainCopy.tip}</div>
-
-      ${secCopy ? `
-        <hr style="margin:16px 0;" />
-        <h3 style="margin:0 0 6px; font-size:16px;">次類型補充：${secCopy.title}</h3>
-        <div><b>${secCopy.one}</b></div>
-        <div style="margin-top:8px;">${secCopy.body}</div>
-      ` : ""}
-
-      <hr style="margin:16px 0;" />
-      <div style="font-weight:700; margin-bottom:6px;">指標（Debug）</div>
-      <div class="mono">
-I_Energy=${ix.I_Energy.toFixed(2)}
-I_Companion=${ix.I_Companion.toFixed(1)} (raw=${(ix.I_Companion/ix.w).toFixed(1)}, w=${ix.w})
-I_Emotion=${ix.I_Emotion.toFixed(1)} (raw=${(ix.I_Emotion/ix.w).toFixed(1)}, w=${ix.w})
-I_Life=${ix.I_Life.toFixed(1)} (raw=${(ix.I_Life/ix.w).toFixed(1)}, w=${ix.w})
-I_Commit=${ix.I_Commit.toFixed(2)}
-note=${res.note}
-      </div>
-
-      ${ans.Q21 ? `<div style="margin-top:12px;"><b>你的開放回答：</b><br/>${escapeHtml(ans.Q21)}</div>` : ""}
-
-    </div>
-  `;
-  out.innerHTML = html;
-}
+// 答案存储（跨页）
+const answers = {}; // { Q1: ..., Q2: ... }
 
 function escapeHtml(s){
   return String(s)
@@ -451,25 +347,278 @@ function escapeHtml(s){
     .replaceAll("\n","<br/>");
 }
 
-document.getElementById("btnCalc").addEventListener("click", ()=>{
-  out.innerHTML = "";
-  try{
-    const ans = readAnswers();
-    const res = judgeType(ans);
-    renderResult(res, ans);
-    window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
-  }catch(e){
-    out.innerHTML = `<div class="warn">⚠️ ${escapeHtml(e.message || String(e))}</div>`;
-    window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+function totalRequired(){
+  // 除 Q21 以外都必填
+  return QUESTIONS.filter(q => q.id !== "Q21").length;
+}
+
+function countAnsweredRequired(){
+  let n = 0;
+  for (const q of QUESTIONS){
+    if (q.id === "Q21") continue;
+    if (answers[q.id] !== undefined && answers[q.id] !== null && answers[q.id] !== "") n++;
   }
-});
+  return n;
+}
 
-document.getElementById("btnReset").addEventListener("click", ()=>{
-  render();
+function renderProgress(){
+  const total = QUESTIONS.length;
+  const step = currentIndex + 1;
+  stepText.textContent = `第 ${step} / ${total} 题`;
+
+  // 进度条：用“必填完成度”更符合心理测验体验
+  const done = countAnsweredRequired();
+  const req = totalRequired();
+  const pct = Math.round((done / req) * 100);
+  progressInner.style.width = `${Math.min(100, Math.max(0, pct))}%`;
+
+  miniHint.textContent = `已完成必填：${done}/${req}（${pct}%）`;
+}
+
+function renderQuestion(){
+  warn.textContent = "";
   out.innerHTML = "";
+
+  const q = QUESTIONS[currentIndex];
+
+  // 按钮状态
+  document.getElementById("btnPrev").disabled = currentIndex === 0;
+
+  // Next按钮文本
+  const isLast = currentIndex === QUESTIONS.length - 1;
+  document.getElementById("btnNext").textContent = isLast ? "提交并查看结果" : "下一题";
+
+  renderProgress();
+
+  // 题卡
+  const card = document.createElement("div");
+  card.className = "qcard";
+
+  const title = document.createElement("div");
+  title.className = "qtitle";
+  title.textContent = q.title;
+  card.appendChild(title);
+
+  const hint = document.createElement("div");
+  hint.className = "qhint";
+  if (q.id === "Q21") hint.textContent = "可不填，一句话就好。";
+  else hint.textContent = "请选择最符合你当下状态的选项。";
+  card.appendChild(hint);
+
+  const opts = document.createElement("div");
+  opts.className = "opts";
+
+  // 渲染控件 + 回填
+  if (q.type === "scale"){
+    const sel = document.createElement("select");
+    sel.name = q.id;
+
+    const op0 = document.createElement("option");
+    op0.value = "";
+    op0.textContent = "请选择…";
+    sel.appendChild(op0);
+
+    for (let i=1;i<=5;i++){
+      const op = document.createElement("option");
+      op.value = String(i);
+      op.textContent = q.labels ? q.labels[i-1] : String(i);
+      sel.appendChild(op);
+    }
+
+    if (answers[q.id] !== undefined && answers[q.id] !== ""){
+      sel.value = String(answers[q.id]);
+    }
+
+    sel.addEventListener("change", () => {
+      answers[q.id] = sel.value ? Number(sel.value) : "";
+      renderProgress();
+    });
+
+    opts.appendChild(sel);
+  }
+
+  if (q.type === "single"){
+    q.options.forEach(([val, labelText])=>{
+      const lab = document.createElement("label");
+      lab.className = "opt";
+
+      const r = document.createElement("input");
+      r.type = "radio";
+      r.name = q.id;
+      r.value = val;
+
+      if (answers[q.id] === val) r.checked = true;
+
+      r.addEventListener("change", ()=>{
+        answers[q.id] = val;
+        renderProgress();
+      });
+
+      const sp = document.createElement("span");
+      sp.textContent = `${val}. ${labelText}`;
+
+      lab.appendChild(r);
+      lab.appendChild(sp);
+      opts.appendChild(lab);
+    });
+  }
+
+  if (q.type === "bool"){
+    [["yes","是"],["no","否"]].forEach(([val, text])=>{
+      const lab = document.createElement("label");
+      lab.className = "opt";
+
+      const r = document.createElement("input");
+      r.type = "radio";
+      r.name = q.id;
+      r.value = val;
+
+      const stored = answers[q.id];
+      if (stored === true && val === "yes") r.checked = true;
+      if (stored === false && val === "no") r.checked = true;
+
+      r.addEventListener("change", ()=>{
+        answers[q.id] = (val === "yes");
+        renderProgress();
+      });
+
+      const sp = document.createElement("span");
+      sp.textContent = text;
+
+      lab.appendChild(r);
+      lab.appendChild(sp);
+      opts.appendChild(lab);
+    });
+  }
+
+  if (q.type === "text"){
+    const ta = document.createElement("textarea");
+    ta.name = q.id;
+    ta.placeholder = "可不填。一句话就好。";
+    if (answers[q.id] !== undefined) ta.value = answers[q.id];
+
+    ta.addEventListener("input", ()=>{
+      answers[q.id] = ta.value || "";
+    });
+
+    opts.appendChild(ta);
+  }
+
+  card.appendChild(opts);
+  questionArea.innerHTML = "";
+  questionArea.appendChild(card);
+}
+
+function validateCurrent(){
+  const q = QUESTIONS[currentIndex];
+  if (q.id === "Q21") return true; // optional
+  const v = answers[q.id];
+  if (v === undefined || v === null || v === "") return false;
+  return true;
+}
+
+function goNext(){
+  warn.textContent = "";
+
+  if (!validateCurrent()){
+    warn.textContent = "⚠️ 这一题还没选完哦。";
+    return;
+  }
+
+  const isLast = currentIndex === QUESTIONS.length - 1;
+  if (!isLast){
+    currentIndex++;
+    renderQuestion();
+    return;
+  }
+
+  // 最后一题：计算结果
+  try{
+    // 将 answers 作为判型输入（确保未答题报错清晰）
+    const res = judgeType(answers);
+    renderResult(res, answers);
+  }catch(e){
+    warn.textContent = `⚠️ ${e.message || String(e)}`;
+  }
+}
+
+function goPrev(){
+  warn.textContent = "";
+  if (currentIndex > 0){
+    currentIndex--;
+    renderQuestion();
+  }
+}
+
+function renderResult(res, ans){
+  const mainCopy = COPY[res.main];
+  const secCopy = res.secondary ? COPY[res.secondary] : null;
+
+  const ix = res.indexes;
+  const html = `
+    <div class="result">
+      <div style="margin-bottom:10px;">
+        <span class="pill">主类型：${res.main}</span>
+        ${res.secondary ? `<span class="pill">次类型：${res.secondary}</span>` : `<span class="pill">次类型：无</span>`}
+        <span class="pill">置信度：${res.confidence}</span>
+      </div>
+
+      <h2 style="margin:8px 0 6px; font-size:18px;">${mainCopy.title}</h2>
+      <div><b>${mainCopy.one}</b></div>
+      <div style="margin-top:8px;">${mainCopy.body}</div>
+      <div style="margin-top:10px;"><i>温柔提醒：</i>${mainCopy.tip}</div>
+
+      ${secCopy ? `
+        <hr style="margin:16px 0;" />
+        <h3 style="margin:0 0 6px; font-size:16px;">次类型补充：${secCopy.title}</h3>
+        <div><b>${secCopy.one}</b></div>
+        <div style="margin-top:8px;">${secCopy.body}</div>
+      ` : ""}
+
+      <hr style="margin:16px 0;" />
+      <div style="font-weight:800; margin-bottom:6px;">指标（Debug）</div>
+      <div class="mono">
+I_Energy=${ix.I_Energy.toFixed(2)}
+I_Companion=${ix.I_Companion.toFixed(1)} (w=${ix.w})
+I_Emotion=${ix.I_Emotion.toFixed(1)} (w=${ix.w})
+I_Life=${ix.I_Life.toFixed(1)} (w=${ix.w})
+I_Commit=${ix.I_Commit.toFixed(2)}
+note=${res.note}
+      </div>
+
+      ${ans.Q21 ? `<div style="margin-top:12px;"><b>你的开放回答：</b><br/>${escapeHtml(ans.Q21)}</div>` : ""}
+
+      <div class="mini" style="margin-top:10px;">
+        ✅ 你可以点击「清空重来」再次测试，或把这个页面直接静态部署给用户使用。
+      </div>
+    </div>
+  `;
+  out.innerHTML = html;
+
+  // 结果出来后把焦点滚到结果
+  setTimeout(()=>window.scrollTo({ top: document.body.scrollHeight, behavior:"smooth" }), 50);
+}
+
+function resetAll(){
+  for (const k of Object.keys(answers)) delete answers[k];
+  currentIndex = 0;
+  renderQuestion();
+  out.innerHTML = "";
+  warn.textContent = "";
+}
+
+document.getElementById("btnNext").addEventListener("click", goNext);
+document.getElementById("btnPrev").addEventListener("click", goPrev);
+
+document.getElementById("btnReset").addEventListener("click", resetAll);
+
+// 仅内测用：快速跳到最后一题
+document.getElementById("btnJumpToResult").addEventListener("click", ()=>{
+  currentIndex = QUESTIONS.length - 1;
+  renderQuestion();
 });
 
-render();
+renderQuestion();
 </script>
 </body>
 </html>
