@@ -362,7 +362,7 @@ const QUESTIONS = [
     options:[["A","现在不太行"],["B","可以，但会有压力"],["C","没问题，我有余裕"]] },
   { id:"Q3", type:"single", title:"Q3 如果短期内没有发展出关系，你会？",
     options:[["A","松一口气"],["B","有点可惜，但能接受"],["C","会明显失落"]] },
-  { id:"Q4", type:"bool", title:"Q4 你是否认同：『我现在的人生重心，可能暂时放不下一段需要被认真对待的关系。』" },
+  { id:"Q4", type:"bool", title:"Q4 你现在是不是还没准备好认真投入一段关系？" },
 
   { id:"Q5", type:"single", title:"Q5（强制单选）如果只能选一个，你现在最希望关系带来的是？",
     options:[["A","生活中不要那么孤单（一起吃饭、玩、出门）"],["B","被在乎、被回应、被放在心上"],["C","有人可以一起把生活过好"],["D","我现在说不清楚"]] },
@@ -849,31 +849,30 @@ function renderQuestion(){
   opts.className = "opts";
 
   if (q.type === "scale"){
-    const sel = document.createElement("select");
-    sel.name = q.id;
-
-    const op0 = document.createElement("option");
-    op0.value = "";
-    op0.textContent = "请选择…";
-    sel.appendChild(op0);
-
+    // 直接展示 1–5 分（不再用下拉选择）
     for (let i=1;i<=5;i++){
-      const op = document.createElement("option");
-      op.value = String(i);
-      op.textContent = q.labels ? q.labels[i-1] : String(i);
-      sel.appendChild(op);
+      const lab = document.createElement("label");
+      lab.className = "opt";
+
+      const r = document.createElement("input");
+      r.type = "radio";
+      r.name = q.id;
+      r.value = String(i);
+
+      if (Number(answers[q.id]) === i) r.checked = true;
+
+      r.addEventListener("change", ()=>{
+        answers[q.id] = i;
+        renderProgress();
+      });
+
+      const sp = document.createElement("span");
+      sp.textContent = q.labels ? q.labels[i-1] : String(i);
+
+      lab.appendChild(r);
+      lab.appendChild(sp);
+      opts.appendChild(lab);
     }
-
-    if (answers[q.id] !== undefined && answers[q.id] !== ""){
-      sel.value = String(answers[q.id]);
-    }
-
-    sel.addEventListener("change", () => {
-      answers[q.id] = sel.value ? Number(sel.value) : "";
-      renderProgress();
-    });
-
-    opts.appendChild(sel);
   }
 
   if (q.type === "single"){
@@ -1155,3 +1154,4 @@ renderQuestion();
 </script>
 </body>
 </html>
+
