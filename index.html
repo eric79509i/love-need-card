@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Gathr 爱情需求卡（测试版）</title>
+  <title>Gathr 爱情需求卡（v1）</title>
   <style>
     :root{
       --bg:#f6f9ff;
@@ -313,8 +313,8 @@
 <body>
   <header>
     <div>
-      <h1>Gathr 爱情需求卡（测试版）</h1>
-      <div class="tagline">一题一页 · 进度条 · 上一题 / 下一题 · 完成后生成「主类型 + 次类型（若有）」并可保存为图片</div>
+      <h1>Gathr 爱情需求卡（v1）</h1>
+      <div class="tagline"> 完成后生成「主类型 + 次类型」并可保存为图片</div>
     </div>
     <div class="brandPill"><span class="dot"></span> Gathr · Love Needs</div>
   </header>
@@ -1013,7 +1013,7 @@ function renderTypeBlock(typeCode, isMain, collapsedDefault=true){
       <div class="secTitle">关系雷区（容易踩）</div>
       <ul class="bullets">${c.sections.pitfalls.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul>
 
-      <div class="secTitle">Gathr 下一步</div>
+      <div class="secTitle">在Gathr的 下一步</div>
       <ul class="bullets">${c.sections.next.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul>
     </div>
   `;
