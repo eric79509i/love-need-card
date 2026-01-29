@@ -6,15 +6,19 @@
   <title>Gathr 爱情需求卡（v1）</title>
   <style>
     :root{
-      --bg:#f6f9ff;
+      --bg:#f3f8ff;
       --panel:#ffffff;
       --text:#0f172a;
       --muted:#64748b;
       --bd:rgba(15,23,42,.10);
 
-      --blue:#2563eb;          /* 主蓝 */
-      --blue2:#60a5fa;         /* 浅蓝 */
-      --blueSoft:rgba(37,99,235,.10);
+      --blue:#1f6fff;          /* 主蓝 */
+      --blue2:#63a3ff;         /* 浅蓝 */
+      --green:#18b37f;         /* 主绿 */
+      --green2:#34d399;        /* 浅绿 */
+      --blueSoft:rgba(31,111,255,.10);
+      --greenSoft:rgba(24,179,127,.10);
+
       --shadow: 0 12px 30px rgba(15,23,42,.08);
       --shadow2: 0 6px 16px rgba(15,23,42,.08);
 
@@ -29,9 +33,12 @@
       margin: 22px auto;
       padding: 0 16px 48px;
       color: var(--text);
-      background: radial-gradient(1200px 420px at 20% -10%, rgba(96,165,250,.28), transparent 60%),
-                  radial-gradient(900px 380px at 90% 0%, rgba(37,99,235,.18), transparent 55%),
-                  var(--bg);
+      background:
+        radial-gradient(1100px 520px at 10% -10%, rgba(99,163,255,.28), transparent 60%),
+        radial-gradient(900px 480px at 95% 0%, rgba(31,111,255,.18), transparent 55%),
+        radial-gradient(900px 520px at 80% 30%, rgba(52,211,153,.20), transparent 55%),
+        radial-gradient(700px 420px at 15% 55%, rgba(24,179,127,.14), transparent 60%),
+        var(--bg);
       line-height: 1.55;
     }
 
@@ -67,7 +74,7 @@
     }
     .dot{
       width: 10px; height: 10px; border-radius: 999px;
-      background: linear-gradient(180deg, var(--blue2), var(--blue));
+      background: linear-gradient(180deg, var(--blue2), var(--blue), var(--green));
       box-shadow: 0 0 0 4px rgba(37,99,235,.14);
     }
 
@@ -79,6 +86,21 @@
       padding: 14px;
       backdrop-filter: blur(8px);
     }
+
+.shell{
+  position: relative;
+}
+.shell::before{
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 18% 22%, rgba(24,179,127,.10), transparent 40%),
+    radial-gradient(circle at 82% 18%, rgba(31,111,255,.10), transparent 42%);
+  mask-image: linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.12));
+}
+
 
     .topbar{
       display:flex;
@@ -124,7 +146,25 @@
       margin-bottom: 8px;
       font-size: 16px;
       letter-spacing: .2px;
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
     }
+    .qicon{
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      flex: 0 0 34px;
+      background: linear-gradient(135deg, rgba(31,111,255,.12), rgba(24,179,127,.12));
+      border: 1px solid rgba(24,179,127,.22);
+      box-shadow: 0 10px 20px rgba(15,23,42,.06);
+      font-size: 18px;
+      line-height: 1;
+    }
+    .qtext{ padding-top: 2px; }
     .qhint{
       color: var(--muted);
       font-size: 13px;
@@ -132,6 +172,13 @@
     }
 
     .opts{ display:grid; gap: 10px; }
+
+label.opt.selected{
+  border-color: rgba(24,179,127,.55);
+  background: linear-gradient(90deg, rgba(31,111,255,.07), rgba(24,179,127,.07));
+  box-shadow: 0 12px 24px rgba(24,179,127,.10), 0 12px 24px rgba(31,111,255,.10);
+}
+
 
     label.opt{
       display:flex;
@@ -145,11 +192,18 @@
       transition: transform .08s ease, border-color .12s ease, background .12s ease, box-shadow .12s ease;
     }
     label.opt:hover{
-      border-color: rgba(37,99,235,.35);
-      background: rgba(37,99,235,.04);
-      box-shadow: 0 8px 18px rgba(37,99,235,.08);
+      border-color: rgba(24,179,127,.42);
+      background: linear-gradient(90deg, rgba(31,111,255,.05), rgba(24,179,127,.05));
+      box-shadow: 0 10px 22px rgba(31,111,255,.10), 0 10px 22px rgba(24,179,127,.08);
       transform: translateY(-1px);
     }
+
+label.opt:has(input[type="radio"]:checked){
+  border-color: rgba(24,179,127,.55);
+  background: linear-gradient(90deg, rgba(31,111,255,.07), rgba(24,179,127,.07));
+  box-shadow: 0 12px 24px rgba(24,179,127,.10), 0 12px 24px rgba(31,111,255,.10);
+}
+
     input[type="radio"]{
       margin-top: 3px;
       accent-color: var(--blue);
@@ -183,17 +237,17 @@
       padding: 11px 14px;
       border-radius: 999px;
       border: 1px solid rgba(15,23,42,.16);
-      background: linear-gradient(180deg, rgba(37,99,235,.95), rgba(29,78,216,.95));
+      background: linear-gradient(90deg, rgba(31,111,255,.98), rgba(24,179,127,.96));
       color: #fff;
       cursor: pointer;
       font-weight: 700;
       letter-spacing: .2px;
-      box-shadow: 0 10px 18px rgba(37,99,235,.18);
+      box-shadow: 0 12px 22px rgba(31,111,255,.18), 0 12px 22px rgba(24,179,127,.14);
       transition: transform .08s ease, box-shadow .12s ease, filter .12s ease;
     }
     button:hover{
       filter: brightness(1.02);
-      box-shadow: 0 14px 24px rgba(37,99,235,.22);
+      box-shadow: 0 16px 28px rgba(31,111,255,.22), 0 16px 28px rgba(24,179,127,.16);
       transform: translateY(-1px);
     }
     button:active{ transform: translateY(0px); }
@@ -210,9 +264,9 @@
     }
 
     button.ghost{
-      background: rgba(37,99,235,.06);
-      color: var(--blue);
-      border: 1px dashed rgba(37,99,235,.45);
+      background: linear-gradient(90deg, rgba(31,111,255,.08), rgba(24,179,127,.08));
+      color: #0b3aa6;
+      border: 1px dashed rgba(24,179,127,.55);
       box-shadow: none;
     }
     button.ghost:hover{
@@ -307,16 +361,217 @@
       border-top: 1px dashed rgba(37,99,235,.25);
     }
     .captureHint{ font-size: 12px; color: var(--muted); }
+  
+    /* ===== Cover ===== */
+    #cover{
+      margin: 10px 0 18px;
+    }
+    .coverCard{
+      background: rgba(255,255,255,.82);
+      border: 1px solid var(--bd);
+      border-radius: calc(var(--radius) + 6px);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+      padding: 26px 22px;
+      backdrop-filter: blur(10px);
+    }
+    .coverCard::before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background:
+        radial-gradient(900px 520px at 20% 20%, rgba(31,111,255,.22), transparent 60%),
+        radial-gradient(820px 520px at 80% 30%, rgba(24,179,127,.22), transparent 58%);
+      pointer-events:none;
+      z-index:0;
+    }
+    .coverGrid{
+      position:relative;
+      z-index:1;
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 18px;
+      align-items: center;
+    }
+    @media (max-width: 720px){
+      .coverGrid{ grid-template-columns: 1fr; }
+    }
+    .coverBrand{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.75);
+      border: 1px solid rgba(15,23,42,.10);
+      box-shadow: var(--shadow2);
+      width: fit-content;
+    }
+    .coverBrand .mark{
+      width: 12px; height: 12px; border-radius: 999px;
+      background: linear-gradient(180deg, var(--blue2), var(--blue), var(--green));
+      box-shadow: 0 0 0 4px rgba(31,111,255,.12);
+    }
+    .coverTitle{
+      margin: 14px 0 8px;
+      font-size: 28px;
+      line-height: 1.2;
+      letter-spacing: .2px;
+    }
+    .coverSub{
+      color: var(--muted);
+      font-size: 14px;
+      margin: 0 0 16px;
+    }
+    .pillRow{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(37,99,235,.16);
+      background: rgba(255,255,255,.70);
+      color: #0b3aa6;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .coverArt{
+      border-radius: 18px;
+      border: 1px solid rgba(15,23,42,.10);
+      background:
+        radial-gradient(240px 240px at 30% 25%, rgba(31,111,255,.35), transparent 60%),
+        radial-gradient(240px 240px at 70% 70%, rgba(24,179,127,.35), transparent 60%),
+        linear-gradient(135deg, rgba(255,255,255,.75), rgba(255,255,255,.55));
+      box-shadow: var(--shadow2);
+      padding: 18px;
+      position: relative;
+      overflow:hidden;
+      min-height: 220px;
+    }
+    .coverArt .big{
+      font-size: 44px;
+      line-height: 1;
+    }
+    .coverArt .small{
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .startBtn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding: 14px 18px;
+      border-radius: 14px;
+      border: none;
+      cursor: pointer;
+      font-weight: 900;
+      letter-spacing: .2px;
+      color: white;
+      background: linear-gradient(90deg, var(--blue), var(--green));
+      box-shadow: 0 14px 30px rgba(31,111,255,.20);
+    }
+    .startBtn:hover{ filter: brightness(1.03); transform: translateY(-1px); }
+    .startBtn:active{ transform: translateY(0); }
+    .startHint{
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+  
+    /* ===== Result CTA (报名链接) ===== */
+    .ctaCard{
+      margin-top: 14px;
+      background: rgba(255,255,255,.86);
+      border: 1px solid rgba(24,179,127,.28);
+      border-radius: calc(var(--radius) + 4px);
+      box-shadow: var(--shadow2);
+      padding: 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .ctaTitle{
+      font-weight: 900;
+      margin: 0 0 4px;
+      font-size: 15px;
+    }
+    .ctaDesc{
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .ctaBtn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap: 8px;
+      padding: 12px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(31,111,255,.25);
+      background: linear-gradient(90deg, var(--blue), var(--green));
+      color: #fff;
+      font-weight: 900;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 12px 24px rgba(31,111,255,.16), 0 12px 24px rgba(24,179,127,.12);
+      transition: transform .08s ease, filter .12s ease;
+      white-space: nowrap;
+    }
+    .ctaBtn:hover{ transform: translateY(-1px); filter: brightness(1.02); }
+    .ctaBtn:active{ transform: translateY(0px); }
+
   </style>
 </head>
 
 <body>
+
+  <div id="cover">
+    <div class="coverCard">
+      <div class="coverGrid">
+        <div>
+          <div class="coverBrand"><span class="mark"></span><strong>Gathr 彩虹需求卡</strong><span style="color:var(--muted);font-weight:600;">💙💚</span></div>
+          <h2 class="coverTitle">找出你现在<br>最需要的关系形式</h2>
+          <p class="coverSub">不是「你想要什么人」，先看「你现在更适合什么关系」。完成后会给你：主类型 + 次类型（若有）与简单解读。</p>
+
+          <button class="startBtn" id="startBtn">✨ 开始测验</button>
+          <div class="startHint">大约 3–5 分钟 · 21 题 · 一题一页</div>
+
+          <div class="pillRow">
+            <div class="pill">🧭 六大关系类型</div>
+            <div class="pill">📊 符合通讯录需求</div>
+            <div class="pill">🔒 保密测验</div>
+          </div>
+        </div>
+
+        <div class="coverArt" aria-hidden="true">
+          <div class="big">💙💚</div>
+          <div class="big" style="margin-top:10px;">✨🫶</div>
+          <div class="small">提示：没有标准答案，选「你现在的真实状态」。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="quiz" style="display:none;">
+
   <header>
     <div>
-      <h1>Gathr 爱情需求卡（v1）</h1>
-      <div class="tagline"> 完成后生成「主类型 + 次类型」并可保存为图片</div>
+      <h1>Gathr 爱情需求卡v1</h1>
+      <div class="tagline">💚 完成后生成「主类型 + 次类型」 ✨</div>
     </div>
-    <div class="brandPill"><span class="dot"></span> Gathr · Love Needs</div>
+    <div class="brandPill"><span class="dot"></span> Gathr · Love Needs 💙💚</div>
   </header>
 
   <div class="shell">
@@ -347,10 +602,26 @@
     </div>
   </div>
 
+  </div>
+
   <!-- html2canvas for saving result as image -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <script>
+
+// ===== Cover gating =====
+const coverEl = document.getElementById('cover');
+const quizEl  = document.getElementById('quiz');
+const startBtn = document.getElementById('startBtn');
+if(startBtn){
+  startBtn.addEventListener('click', () => {
+    coverEl.style.display = 'none';
+    quizEl.style.display = 'block';
+    // 回到顶部（移动端更顺）
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+}
+
 /**
  * =========================
  * 1) 题库（v1.1）
@@ -364,7 +635,7 @@ const QUESTIONS = [
     options:[["A","松一口气"],["B","有点可惜，但能接受"],["C","会明显失落"]] },
   { id:"Q4", type:"bool", title:"Q4 你现在是不是还没准备好认真投入一段关系？" },
 
-  { id:"Q5", type:"single", title:"Q5（强制单选）如果只能选一个，你现在最希望关系带来的是？",
+  { id:"Q5", type:"single", title:"Q5（只能单选）如果只能选一个，你现在最希望关系带来的是？",
     options:[["A","生活中不要那么孤单（一起吃饭、玩、出门）"],["B","被在乎、被回应、被放在心上"],["C","有人可以一起把生活过好"],["D","我现在说不清楚"]] },
   { id:"Q6", type:"scale", title:"Q6 你对「周末是否有人一起安排活动」的在意程度？", labels:["1 完全不在意","2","3","4","5 非常在意"] },
   { id:"Q7", type:"scale", title:"Q7 你对「情绪是否被稳定回应」的在意程度？", labels:["1 不需要","2","3","4","5 非常需要"] },
@@ -837,7 +1108,16 @@ function renderQuestion(){
 
   const title = document.createElement("div");
   title.className = "qtitle";
-  title.textContent = q.title;
+  // 小图标：只改UI，不改题目内容
+const iconMap = { scale:"📊", single:"🧩", bool:"✅", text:"💬" };
+const iconSpan = document.createElement("span");
+iconSpan.className = "qicon";
+iconSpan.textContent = iconMap[q.type] || "💠";
+const textSpan = document.createElement("span");
+textSpan.className = "qtext";
+textSpan.textContent = q.title;
+title.appendChild(iconSpan);
+title.appendChild(textSpan);
   card.appendChild(title);
 
   const hint = document.createElement("div");
@@ -847,6 +1127,15 @@ function renderQuestion(){
 
   const opts = document.createElement("div");
   opts.className = "opts";
+
+  function markSelected(name){
+    opts.querySelectorAll(`input[name="${name}"]`).forEach(inp=>{
+      const lab = inp.closest("label.opt");
+      if (!lab) return;
+      if (inp.checked) lab.classList.add("selected");
+      else lab.classList.remove("selected");
+    });
+  }
 
   if (q.type === "scale"){
     // 直接展示 1–5 分（不再用下拉选择）
@@ -864,6 +1153,7 @@ function renderQuestion(){
       r.addEventListener("change", ()=>{
         answers[q.id] = i;
         renderProgress();
+        markSelected(q.id);
       });
 
       const sp = document.createElement("span");
@@ -890,6 +1180,7 @@ function renderQuestion(){
       r.addEventListener("change", ()=>{
         answers[q.id] = val;
         renderProgress();
+        markSelected(q.id);
       });
 
       const sp = document.createElement("span");
@@ -918,6 +1209,7 @@ function renderQuestion(){
       r.addEventListener("change", ()=>{
         answers[q.id] = (val === "yes");
         renderProgress();
+        markSelected(q.id);
       });
 
       const sp = document.createElement("span");
@@ -945,6 +1237,8 @@ function renderQuestion(){
   card.appendChild(opts);
   questionArea.innerHTML = "";
   questionArea.appendChild(card);
+  // 初始高亮
+  markSelected(q.id);
 }
 
 function validateCurrent(){
@@ -1013,7 +1307,7 @@ function renderTypeBlock(typeCode, isMain, collapsedDefault=true){
       <div class="secTitle">关系雷区（容易踩）</div>
       <ul class="bullets">${c.sections.pitfalls.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul>
 
-      <div class="secTitle">在Gathr的 下一步</div>
+      <div class="secTitle">Gathr 下一步</div>
       <ul class="bullets">${c.sections.next.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul>
     </div>
   `;
@@ -1044,6 +1338,15 @@ function renderTypeBlock(typeCode, isMain, collapsedDefault=true){
         </div>
       </div>
     </div>
+
+    <div class="ctaCard">
+      <div>
+        <div class="ctaTitle">🚀 继续 Gathr 的约会旅程</div>
+        <p class="ctaDesc">想让红娘帮你把结果变成「可行动的配对」？点这里去报名（约 1 分钟）。</p>
+      </div>
+      <a class="ctaBtn" href="https://jinshuju.com/f/u59pbY" target="_blank" rel="noopener noreferrer">去报名 →</a>
+    </div>
+
   `;
 }
 
@@ -1154,4 +1457,3 @@ renderQuestion();
 </script>
 </body>
 </html>
-
